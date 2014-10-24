@@ -20,5 +20,18 @@ CREATE TABLE tx_awesome_url_domain (
 	path_prefix varchar(40) DEFAULT NULL,
 
 	PRIMARY KEY (uid),
-	KEY parent (pid)
+);
+
+CREATE TABLE tx_awesome_url_uri (
+	uid int(11) NOT NULL auto_increment,
+
+	domain_name varchar(80) NOT NULL,
+	uri varchar(255) NOT NULL,
+	status int(1) DEFAULT '1' NOT NULL,
+	uid_foreign int(11) NOT NULL,
+	sys_language_uid_foreign int(11) NOT NULL,
+
+	PRIMARY KEY (uid),
+	KEY tx_awesome_url_domain_idx1 (domain_name, uri, status),
+	UNIQUE KEY tx_awesome_url_domain_idx2 (domain_name, uri),
 );

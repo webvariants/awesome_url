@@ -14,16 +14,23 @@ class Url {
 	 * @var \TYPO3\CMS\Frontend\Page\PageRepository
 	 */
 	private $pageContext = null;
-	private $sys_language_uid = null;
+
+	/**
+	 *
+	 * @var \WV\AwesomeUrl\Service\UriBuilder
+	 */
+	private $uri_builder = null;
 
 	public function __construct() {
 		if (isset($GLOBALS['TSFE']) && is_object($GLOBALS['TSFE']) && is_object($GLOBALS['TSFE']->sys_page)) {
 			$this->pageContext = $GLOBALS['TSFE']->sys_page;
-			$this->sys_language_uid = (int) $GLOBALS['TSFE']->sys_language_uid;
 		} else {
 			$this->pageContext = GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Page\\PageRepository');
 		}
+
+		$this->uri_builder = GeneralUtility::makeInstance('WV\\AwesomeUrl\\Service\\UriBuilder');
 	}
+
 
 	/**
 	 *
@@ -33,6 +40,7 @@ class Url {
 	public function linkDataPost(&$params, $ts) {
 		/* @var $ts \TYPO3\CMS\Core\TypoScript\TemplateService */
 		$page = $params['args']['page'];
+		$sys_language_uid = (int) $GLOBALS['TSFE']->sys_language_uid;
 
 		if ($page) {
 			$current_site_uid = (int) $ts->rootLine[0]['uid'];
@@ -46,25 +54,26 @@ class Url {
 			$new_domain = null;
 			$new_scheme = null;
 
-			list($targetDomain, $path_prefix, $is_language_domain) = $this->fetchDomainInfo($target_site_uid, $target_language_uid);
+			$domain_info = $this->fetchDomainInfo($target_site_uid, $target_language_uid);
 
-			if ($is_language_domain && array_key_exists('L', $linkVarsArray)) {
-				unset($linkVarsArray['L']);
-				$new_linkVars = GeneralUtility::implodeArrayForUrl('', $linkVarsArray, '', false, true);
+			if ($domain_info['is_language_domain']) {
+				$this->unsetLinkVar('L', $linkVarsArray, $new_linkVars);
 			}
 
-			if ($current_site_uid != $target_site_uid || $this->sys_language_uid != $target_language_uid) {
-				if ($targetDomain) {
-					$new_domain = $targetDomain;
+			if ($current_site_uid != $target_site_uid || $sys_language_uid != $target_language_uid) {
+				if ($domain_info['name'] != GeneralUtility::getIndpEnv('HTTP_HOST')) {
+					$new_domain = $domain_info['name'];
 					$new_scheme = $this->scheme($page);
 				}
 			}
 
 			$urlParts = parse_url($params['LD']['totalURL']);
-			$change = false;
+
+			$urlParts['path'] = $this->uri_builder->pathFromPage($domain_info, $page['uid'], $target_language_uid);
+			$this->unsetLinkVar('id', $linkVarsArray, $new_linkVars);
+
 			if ($new_domain) {
 				$urlParts['host'] = $new_domain;
-				$change = true;
 			}
 			if ($new_scheme) {
 				if (array_key_exists('port', $urlParts)) {
@@ -73,19 +82,31 @@ class Url {
 					}
 				}
 				$urlParts['scheme'] = $new_scheme;
-				$change = true;
-			}
-			if ($path_prefix) {
-				$urlParts['path'] = $path_prefix . (array_key_exists('path', $urlParts) ? $urlParts['path'] : '');
-				$change = true;
-			}
-			if ($new_linkVars !== null) {
-				$urlParts['query'] = $new_linkVars;
-				$change = true;
 			}
 
-			if ($change) {
-				$params['LD']['totalURL'] = $this->build_url($urlParts);
+			if ($new_linkVars !== null) {
+				$urlParts['query'] = $new_linkVars;
+			}
+
+			$params['LD']['totalURL'] = $this->build_url($urlParts);
+		}
+	}
+
+	/**
+	 *
+	 * @param array $parameters
+	 * @param \TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController $parentObject
+	 * @return void
+	 */
+	public function checkAlternativeIdMethodsPost(array &$parameters, &$parentObject) {
+		if ($parentObject->siteScript && substr($parentObject->siteScript, 0, 9) != 'index.php') {
+			$uParts = parse_url($parentObject->siteScript);
+
+			$uri_entry = $this->uri_builder->findUriByDomaiNameUri(GeneralUtility::getIndpEnv('HTTP_HOST'), $uParts['path']);
+			if ($uri_entry) {
+				$parentObject->type = 0;
+				$parentObject->id = $uri_entry['uid_foreign'];
+				$parentObject->sys_language_uid = $uri_entry['sys_language_uid_foreign'];
 			}
 		}
 	}
@@ -122,12 +143,22 @@ class Url {
 		}
 		$db->sql_free_result($res);
 
-		return array($targetDomain, $path_prefix, $is_language_domain);
+		if ($targetDomain === null) {
+			$targetDomain = GeneralUtility::getIndpEnv('HTTP_HOST');
+		}
+
+		return array(
+			'name' => $targetDomain,
+			'pid' => $target_site_uid,
+			'path_prefix' => $path_prefix,
+			'is_language_domain' => $is_language_domain
+		);
 	}
 
 	private function extractLanguage($linkVarsArray) {
+		$sys_language_uid = (int) $GLOBALS['TSFE']->sys_language_uid;
 		$L = array_key_exists('L', $linkVarsArray) ? $linkVarsArray['L'] : null;
-		$target_language_uid = $this->sys_language_uid;
+		$target_language_uid = $sys_language_uid;
 		if ($L !== null && strlen($L) && is_numeric($L)) {
 			$target_language_uid = (int) $L;
 		}
@@ -168,6 +199,13 @@ class Url {
 		}
 
 		return $url;
+	}
+
+	private function unsetLinkVar($var, &$linkVarsArray, &$new_linkVars) {
+		if (array_key_exists($var, $linkVarsArray)) {
+			unset($linkVarsArray[$var]);
+		}
+		$new_linkVars = GeneralUtility::implodeArrayForUrl('', $linkVarsArray, '', false, true);
 	}
 
 }

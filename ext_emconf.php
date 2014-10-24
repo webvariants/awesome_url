@@ -18,13 +18,12 @@ $EM_CONF[$_EXTKEY] = array(
 		array(
 			'php' => '5.3.0-0.0.0',
 			'typo3' => '6.2.1-0.0.0',
-			'simulatestatic' => ''
 		),
 		'conflicts' =>
 		array(
 			1 => 'cooluri',
 			2 => 'realurl',
-//			3 => 'simulatestatic',
+			3 => 'simulatestatic',
 		),
 		'suggests' =>
 		array(
