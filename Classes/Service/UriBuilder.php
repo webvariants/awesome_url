@@ -26,23 +26,23 @@ class UriBuilder {
 
 	public function pathFromPage($domain_info, $uid, $sys_language_uid = null) {
 		if ($uid == $domain_info['pid']) {
-			return $domain_info['path_prefix'];
-		}
-
-		$page = $this->pageContext->getPage($uid);
-		if ($sys_language_uid) {
-			$page = $this->pageContext->getPageOverlay($page, $sys_language_uid);
-		}
-
-		$parent_path = '';
-		if ($page['pid'] > 0) {
-			$parent_path = $this->pathFromPage($domain_info, $page['pid'], $sys_language_uid);
-			if (strlen($parent_path)) {
-				$parent_path .= '/';
+			$path = $domain_info['path_prefix'];
+		} else {
+			$page = $this->pageContext->getPage($uid);
+			if ($sys_language_uid) {
+				$page = $this->pageContext->getPageOverlay($page, $sys_language_uid);
 			}
-		}
 
-		$path = $parent_path . $this->fileNameASCIIPrefix($page['title']);
+			$parent_path = '';
+			if ($page['pid'] > 0) {
+				$parent_path = $this->pathFromPage($domain_info, $page['pid'], $sys_language_uid);
+				if (strlen($parent_path)) {
+					$parent_path .= '/';
+				}
+			}
+
+			$path = $parent_path . $this->fileNameASCIIPrefix($page['title']);
+		}
 
 		$uri_entry = $this->findUriByDomaiNameUri($domain_info['name'], $path);
 		if ($uri_entry) {
@@ -59,7 +59,6 @@ class UriBuilder {
 					// reuse 
 				}
 			}
-
 		} else {
 			$this->insert($domain_info['name'], $path, 1, $uid, $sys_language_uid);
 		}

@@ -31,7 +31,6 @@ class Url {
 		$this->uri_builder = GeneralUtility::makeInstance('WV\\AwesomeUrl\\Service\\UriBuilder');
 	}
 
-
 	/**
 	 *
 	 * @param array $params with keys LD, args, typeNum
@@ -99,14 +98,17 @@ class Url {
 	 * @return void
 	 */
 	public function checkAlternativeIdMethodsPost(array &$parameters, &$parentObject) {
-		if ($parentObject->siteScript && substr($parentObject->siteScript, 0, 9) != 'index.php') {
+		if (substr($parentObject->siteScript, 0, 9) != 'index.php') {
 			$uParts = parse_url($parentObject->siteScript);
 
 			$uri_entry = $this->uri_builder->findUriByDomaiNameUri(GeneralUtility::getIndpEnv('HTTP_HOST'), $uParts['path']);
 			if ($uri_entry) {
 				$parentObject->type = 0;
 				$parentObject->id = $uri_entry['uid_foreign'];
-				$parentObject->sys_language_uid = $uri_entry['sys_language_uid_foreign'];
+//				$parentObject->sys_language_uid = $uri_entry['sys_language_uid_foreign']; // seems not nessesary
+				if ($uri_entry['sys_language_uid_foreign']) {
+					$_GET['L'] = $uri_entry['sys_language_uid_foreign'];
+				}
 			}
 		}
 	}
