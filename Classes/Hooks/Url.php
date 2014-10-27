@@ -49,14 +49,21 @@ class Url {
 			$linkVarsArray = GeneralUtility::explodeUrl2Array($linkVars);
 			$target_language_uid = $this->extractLanguage($linkVarsArray);
 
-			$new_linkVars = null;
 			$new_domain = null;
 			$new_scheme = null;
+
+			if ($params['LD']['type']) {
+				$type = array();
+				parse_str($params['LD']['type'], $type);
+				foreach ($type as $t_key => $t_value) {
+					$linkVarsArray[$t_key] = $t_value;
+				}
+			}
 
 			$domain_info = $this->fetchDomainInfo($target_site_uid, $target_language_uid);
 
 			if ($domain_info['is_language_domain']) {
-				$this->unsetLinkVar('L', $linkVarsArray, $new_linkVars);
+				$this->unsetLinkVar('L', $linkVarsArray);
 			}
 
 			if ($current_site_uid != $target_site_uid || $sys_language_uid != $target_language_uid) {
@@ -69,7 +76,7 @@ class Url {
 			$urlParts = parse_url($params['LD']['totalURL']);
 
 			$urlParts['path'] = $this->uri_builder->pathFromPage($domain_info, $page['uid'], $target_language_uid);
-			$this->unsetLinkVar('id', $linkVarsArray, $new_linkVars);
+			$this->unsetLinkVar('id', $linkVarsArray);
 
 			if ($new_domain) {
 				$urlParts['host'] = $new_domain;
@@ -83,9 +90,7 @@ class Url {
 				$urlParts['scheme'] = $new_scheme;
 			}
 
-			if ($new_linkVars !== null) {
-				$urlParts['query'] = $new_linkVars;
-			}
+			$urlParts['query'] = $linkVarsArray ? ltrim(GeneralUtility::implodeArrayForUrl('', $linkVarsArray, '', false, true), '&') : '';
 
 			$params['LD']['totalURL'] = $this->build_url($urlParts);
 		}
@@ -103,7 +108,7 @@ class Url {
 
 			$uri_entry = $this->uri_builder->findUriByDomaiNameUri(GeneralUtility::getIndpEnv('HTTP_HOST'), $uParts['path']);
 			if ($uri_entry) {
-				$parentObject->type = 0;
+//				$parentObject->type = 0;
 				$parentObject->id = $uri_entry['uid_foreign'];
 //				$parentObject->sys_language_uid = $uri_entry['sys_language_uid_foreign']; // seems not nessesary
 				if ($uri_entry['sys_language_uid_foreign']) {
@@ -203,11 +208,10 @@ class Url {
 		return $url;
 	}
 
-	private function unsetLinkVar($var, &$linkVarsArray, &$new_linkVars) {
+	private function unsetLinkVar($var, &$linkVarsArray) {
 		if (array_key_exists($var, $linkVarsArray)) {
 			unset($linkVarsArray[$var]);
 		}
-		$new_linkVars = GeneralUtility::implodeArrayForUrl('', $linkVarsArray, '', false, true);
 	}
 
 }
