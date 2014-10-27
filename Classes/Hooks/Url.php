@@ -62,6 +62,12 @@ class Url {
 
 			$domain_info = $this->fetchDomainInfo($target_site_uid, $target_language_uid);
 
+			if (!$domain_info) {
+				// without domain info we can not generate urls
+
+				return;
+			}
+
 			if ($domain_info['is_language_domain']) {
 				$this->unsetLinkVar('L', $linkVarsArray);
 			}
@@ -151,7 +157,8 @@ class Url {
 		$db->sql_free_result($res);
 
 		if ($targetDomain === null) {
-			$targetDomain = GeneralUtility::getIndpEnv('HTTP_HOST');
+
+			return null;
 		}
 
 		return array(

@@ -41,7 +41,8 @@ class UriBuilder {
 				}
 			}
 
-			$path = $parent_path . $this->fileNameASCIIPrefix($page['title']);
+			$alias = trim($page['tx_awesome_url_alias']);
+			$path = $parent_path . $this->fileNameASCIIPrefix($alias ? : $page['title']);
 		}
 
 		$uri_entry = $this->findUriByDomaiNameUri($domain_info['name'], $path);

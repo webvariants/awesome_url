@@ -6,7 +6,7 @@ if (!defined('TYPO3_MODE')) {
 
 $GLOBALS['TCA']['tx_awesome_url_domain'] = array(
 	'ctrl' => array(
-		'title' => 'Kontakt',
+		'title' => 'Awesome URL domain',
 		'label' => 'path_prefix',
 		'label_alt' => 'sys_language_uid',
 		'label_alt_force' => true,
@@ -86,3 +86,61 @@ $GLOBALS['TCA']['tx_awesome_url_domain'] = array(
 
 
 \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addToAllTCAtypes('sys_domain', 'tx_awesome_url_domain');
+
+\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTCAcolumns('pages', array(
+	'tx_awesome_url_alias' => array(
+		'exclude' => 0,
+		'label' => 'Awesome URL alias',
+		'config' => array(
+			'type' => 'input',
+			'size' => '40',
+		)
+	)
+));
+
+\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTCAcolumns('pages', array(
+	'tx_awesome_url_exclude_sub' => array(
+		'exclude' => 0,
+		'label' => 'Awesome URL in subpages',
+		'config' => array(
+			'type' => 'check',
+			'items' => array(
+				'1' => array(
+					'0' => 'hide'
+				)
+			)
+		)
+	)
+));
+
+\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addToAllTCAtypes('pages', 'tx_awesome_url_alias', '', 'after:subtitle');
+\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addToAllTCAtypes('pages', 'tx_awesome_url_exclude_sub', '', 'after:tx_awesome_url_alias');
+
+\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTCAcolumns('pages_language_overlay', array(
+	'tx_awesome_url_alias' => array(
+		'exclude' => 0,
+		'label' => 'Awesome URL alias',
+		'config' => array(
+			'type' => 'input',
+			'size' => '40',
+		)
+	)
+));
+
+\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTCAcolumns('pages_language_overlay', array(
+	'tx_awesome_url_exclude_sub' => array(
+		'exclude' => 0,
+		'label' => 'Awesome URL in subpages',
+		'config' => array(
+			'type' => 'check',
+			'items' => array(
+				'1' => array(
+					'0' => 'hide'
+				)
+			)
+		)
+	)
+));
+
+\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addToAllTCAtypes('pages_language_overlay', 'tx_awesome_url_alias', '', 'after:subtitle');
+\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addToAllTCAtypes('pages_language_overlay', 'tx_awesome_url_exclude_sub', '', 'after:tx_awesome_url_alias');

@@ -2,6 +2,16 @@ CREATE TABLE sys_domain (
 	tx_awesome_url_domain int(11) unsigned DEFAULT '0' NOT NULL,
 );
 
+CREATE TABLE pages (
+	tx_awesome_url_alias varchar(40) DEFAULT '',
+	tx_awesome_url_exclude_sub tinyint(4) DEFAULT '0' NOT NULL,
+);
+
+CREATE TABLE pages_language_overlay (
+	tx_awesome_url_alias varchar(40) DEFAULT '',
+	tx_awesome_url_exclude_sub tinyint(4) DEFAULT '0' NOT NULL,
+);
+
 CREATE TABLE tx_awesome_url_domain (
 	uid int(11) NOT NULL auto_increment,
 	pid int(11) DEFAULT '0' NOT NULL,
