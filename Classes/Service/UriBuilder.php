@@ -46,17 +46,25 @@ class UriBuilder {
 
 		$uri_entry = $this->findUriByDomaiNameUri($domain_info['name'], $path);
 		if ($uri_entry) {
-			if ($uri_entry['uid_forign'] == $uid && $uri_entry['sys_language_uid_foreign'] == $sys_language_uid) {
+			// found entry
+
+			if ($uri_entry['uid_foreign'] == $uid && $uri_entry['sys_language_uid_foreign'] == $sys_language_uid) {
+				// matching uid and language
+
 				if ($uri_entry['status'] == 1) {
-					return $path;
+					// status active -> just return path (best case)
 				} else {
-					// update status
+					// not active -> let's reactivate the old entry
+					$this->reactivate($uri_entry);
 				}
 			} else {
+				// entry is matching an other object (uid/sys_language_uid)
 				if ($uri_entry['status'] == 1) {
-					// append number
+					// the entry is active, so we must use a different name
+					$path = $this->name_suffix($domain_info['name'], $path, $uid, $sys_language_uid);
 				} else {
-					// reuse 
+					// the entry is not active, so we can take it over
+					$this->reuse($uri_entry, $uid, $sys_language_uid);
 				}
 			}
 		} else {
@@ -74,7 +82,7 @@ class UriBuilder {
 	 * @param	string		Character to put in the end of string to merge it with the next value.
 	 * @return	string		Converted string
 	 */
-	public function fileNameASCIIPrefix($inTitle, $maxTitleChars = 20) {
+	public function fileNameASCIIPrefix($inTitle, $maxTitleChars = 40) {
 		$out = $GLOBALS['TSFE']->csConvObj->specCharsToASCII($GLOBALS['TSFE']->renderCharset, $inTitle);
 
 		// Get replacement character
@@ -98,20 +106,67 @@ class UriBuilder {
 
 	public function findUriByDomaiNameUri($domain_name, $uri) {
 		$db = $this->db();
+		$uri_depth = count(explode('/', $uri));
 		$domain_name_safe = $db->fullQuoteStr($domain_name, 'tx_awesome_url_uri');
 		$uri_safe = $db->fullQuoteStr($uri, 'tx_awesome_url_uri');
-		$res = $db->exec_SELECTquery('uid,status,uid_foreign,sys_language_uid_foreign', 'tx_awesome_url_uri', "domain_name = $domain_name_safe AND uri = $uri_safe");
+		$res = $db->exec_SELECTquery('uid,status,uid_foreign,sys_language_uid_foreign', 'tx_awesome_url_uri', "domain_name = $domain_name_safe AND uri = $uri_safe AND uri_depth = $uri_depth");
 		$row = $db->sql_fetch_assoc($res);
 		$db->sql_free_result($res);
 
 		return $row;
 	}
 
+	public function findStartingUriByDomaiNameUriFor($domain_name, $uri_start, $uid_foreign, $sys_language_uid_foreign) {
+		$entries = array();
+		$db = $this->db();
+		$uri_length = mb_strlen($uri_start, 'UTF-8');
+		$uri_depth = count(explode('/', $uri_start));
+		$domain_name_safe = $db->fullQuoteStr($domain_name, 'tx_awesome_url_uri');
+		$uri_like = strtr($uri_start, array('_' => '\_', '%' => '\%')) . '%';
+		$uri_like_safe = $db->fullQuoteStr($uri_like, 'tx_awesome_url_uri');
+		$where = "domain_name = $domain_name_safe AND uri LIKE $uri_like_safe AND uri_depth = $uri_depth AND uid_foreign = $uid_foreign AND sys_language_uid_foreign = $sys_language_uid_foreign";
+		$res = $db->exec_SELECTquery('uid,uri,status,uid_foreign,sys_language_uid_foreign', 'tx_awesome_url_uri', $where);
+
+		while ($row = $db->sql_fetch_assoc($res)) {
+			$entries[mb_substr($row['uri'], $uri_length, 255, 'UTF-8')] = $row;
+		}
+
+		$db->sql_free_result($res);
+
+		return $entries;
+	}
+
+	public function findStartingUriByDomaiNameUri($domain_name, $uri_start, $not_uid_foreign = null, $not_sys_language_uid_foreign = null) {
+		$entries = array();
+		$db = $this->db();
+		$uri_length = mb_strlen($uri_start, 'UTF-8');
+		$uri_depth = count(explode('/', $uri_start));
+		$domain_name_safe = $db->fullQuoteStr($domain_name, 'tx_awesome_url_uri');
+		$uri_like = strtr($uri_start, array('_' => '\_', '%' => '\%')) . '%';
+		$uri_like_safe = $db->fullQuoteStr($uri_like, 'tx_awesome_url_uri');
+		$where = "domain_name = $domain_name_safe AND uri LIKE $uri_like_safe AND uri_depth = $uri_depth";
+		if ($not_uid_foreign !== null && $not_sys_language_uid_foreign !== null) {
+			$where .= " AND uid_foreign != $not_uid_foreign AND sys_language_uid_foreign != $not_sys_language_uid_foreign";
+		}
+		$res = $db->exec_SELECTquery('uid,uri,status,uid_foreign,sys_language_uid_foreign', 'tx_awesome_url_uri', $where);
+
+		while ($row = $db->sql_fetch_assoc($res)) {
+			$entries[mb_substr($row['uri'], $uri_length, 255, 'UTF-8')] = $row;
+		}
+
+		$db->sql_free_result($res);
+
+		return $entries;
+	}
+
 	private function insert($domain_name, $uri, $status, $uid_foreign, $sys_language_uid_foreign) {
 		$db = $this->db();
+		$uri_depth = count(explode('/', $uri));
+
 		$db->exec_INSERTquery('tx_awesome_url_uri', array(
 			'domain_name' => $domain_name,
 			'uri' => $uri,
+			'uri_depth' => $uri_depth,
 			'status' => $status,
 			'uid_foreign' => $uid_foreign,
 			'sys_language_uid_foreign' => $sys_language_uid_foreign
@@ -121,6 +176,84 @@ class UriBuilder {
 		$db->sql_free_result($res);
 
 		return $uid;
+	}
+
+	private function reactivate($uri_entry) {
+		$db = $this->db();
+		$uid = $uri_entry['uid'];
+		$uid_foreign = $uri_entry['uid_foreign'];
+		$sys_language_uid_foreign = $uri_entry['sys_language_uid_foreign'];
+
+		$res = $db->exec_UPDATEquery('tx_awesome_url_uri', "uid = $uid", array('status' => 1));
+		$db->sql_free_result($res);
+
+		$res = $db->exec_UPDATEquery('tx_awesome_url_uri', "status = 1 AND uid_foreign = $uid_foreign AND sys_language_uid_foreign = $sys_language_uid_foreign AND uid != $uid", array('status' => 0));
+		$db->sql_free_result($res);
+	}
+
+	private function reuse($uri_entry, $uid_foreign, $sys_language_uid_foreign) {
+		$db = $this->db();
+		$uid = $uri_entry['uid'];
+
+		$res = $db->exec_UPDATEquery('tx_awesome_url_uri', "uid = $uid", array(
+			'status' => 1,
+			'uid_foreign' => $uid_foreign,
+			'sys_language_uid_foreign' => $sys_language_uid_foreign
+		));
+		$db->sql_free_result($res);
+
+		$res = $db->exec_UPDATEquery('tx_awesome_url_uri', "status = 1 AND uid_foreign = $uid_foreign AND sys_language_uid_foreign = $sys_language_uid_foreign AND uid != $uid", array('status' => 0));
+		$db->sql_free_result($res);
+	}
+
+	private function name_suffix($domain_name, $uri, $uid_foreign, $sys_language_uid_foreign) {
+		// reuse entries for same target
+		$entries = $this->findStartingUriByDomaiNameUriFor($domain_name, $uri, $uid_foreign, $sys_language_uid_foreign);
+		$shortest = null;
+		foreach ($entries as $suffix => $entry) {
+			if ($entry['status'] == 1) {
+				return $entry['uri'];
+			}
+
+			if ($shortest === null || strlen($suffix) < strlen($shortest)) {
+				$shortest = $suffix;
+			}
+		}
+
+		if ($shortest !== null) {
+			$this->reactivate($entries[$shortest]);
+			return $entries[$shortest]['uri'];
+		}
+
+		// reuse entries for other targets or create new one
+
+		$db = $this->db();
+
+		$existing = $this->findStartingUriByDomaiNameUri($domain_name, $uri);
+		$i = 1;
+
+		while (true) {
+			$i++; // we want to start with 2
+			$suffix = '-' . $i;
+			if (array_key_exists($suffix, $existing)) {
+				if ($existing[$suffix]['status'] == 0) {
+					$this->reuse($existing[$suffix], $uid_foreign, $sys_language_uid_foreign);
+					return $existing[$suffix]['uri'];
+				}
+			} else {
+				$uri_suffix = $uri . $suffix;
+				$entry_uid = $this->insert($domain_name, $uri_suffix, 1, $uid_foreign, $sys_language_uid_foreign);
+
+				if ($entry_uid) {
+					// if insert went fine, deactivate old entries for target
+
+					$res = $db->exec_UPDATEquery('tx_awesome_url_uri', "status = 1 AND uid_foreign = $uid_foreign AND sys_language_uid_foreign = $sys_language_uid_foreign AND uid != $entry_uid", array('status' => 0));
+					$db->sql_free_result($res);
+
+					return $uri_suffix;
+				}
+			}
+		}
 	}
 
 }
