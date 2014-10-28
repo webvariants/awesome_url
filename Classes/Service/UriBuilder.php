@@ -24,7 +24,18 @@ class UriBuilder {
 		}
 	}
 
+	/**
+	 *
+	 * @param array $domain_info array with pid, path_prefix, name
+	 * @param int $uid of page
+	 * @param int $sys_language_uid of page
+	 * @return string path
+	 */
 	public function pathFromPage($domain_info, $uid, $sys_language_uid = null) {
+		return $this->privatePathFromPage($domain_info, $uid, $sys_language_uid);
+	}
+
+	private function privatePathFromPage($domain_info, $uid, $sys_language_uid = null, $private_recursion = 0) {
 		if ($uid == $domain_info['pid']) {
 			$path = $domain_info['path_prefix'];
 		} else {
@@ -33,16 +44,19 @@ class UriBuilder {
 				$page = $this->pageContext->getPageOverlay($page, $sys_language_uid);
 			}
 
-			$parent_path = '';
+			$path = '';
 			if ($page['pid'] > 0) {
-				$parent_path = $this->pathFromPage($domain_info, $page['pid'], $sys_language_uid);
-				if (strlen($parent_path)) {
-					$parent_path .= '/';
-				}
+				$path = $this->privatePathFromPage($domain_info, $page['pid'], $sys_language_uid, 1, $uid);
 			}
 
-			$alias = trim($page['tx_awesome_url_alias']);
-			$path = $parent_path . $this->fileNameASCIIPrefix($alias ? : $page['title']);
+			if ($private_recursion && $page['tx_awesome_url_exclude_sub']) {
+				// on exclusion we do not need to save the path, so just return the $path now
+
+				return $path;
+			} else {
+				$alias = trim($page['tx_awesome_url_alias']);
+				$path .= (strlen($path) ? '/' : '') . $this->fileNameASCIIPrefix($alias ? : $page['title']);
+			}
 		}
 
 		$uri_entry = $this->findUriByDomaiNameUri($domain_info['name'], $path);
