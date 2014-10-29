@@ -116,8 +116,26 @@ class Url {
 	public function checkAlternativeIdMethodsPost(array &$parameters, &$parentObject) {
 		if (substr($parentObject->siteScript, 0, 9) != 'index.php') {
 			$uParts = parse_url($parentObject->siteScript);
+			$path = $uParts['path'];
 
-			$uri_entry = $this->uri_builder->findUriByDomaiNameUri(GeneralUtility::getIndpEnv('HTTP_HOST'), $uParts['path']);
+			$simulatestatic = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['awesome_url']['simulatestatic'];
+			if ($simulatestatic && $path) {
+				if (substr($path, -5) == '.html') {
+					if (preg_match('/(.(\d+))?\.(\d+)\.html$/', $path, $matches)) {
+						if ($matches[2] === '') {
+							$parentObject->type = 0;
+							$parentObject->id = $matches[3];
+						} else {
+							$parentObject->type = $matches[3];
+							$parentObject->id = $matches[2];
+						}
+
+						return;
+					}
+				}
+			}
+
+			$uri_entry = $this->uri_builder->findUriByDomaiNameUri(GeneralUtility::getIndpEnv('HTTP_HOST'), $path);
 			if ($uri_entry) {
 //				$parentObject->type = 0;
 				$parentObject->id = $uri_entry['uid_foreign'];

@@ -30,3 +30,5 @@ array(
 		$TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY][$key] = $value;
 	}
 }
+
+$TYPO3_CONF_VARS['EXTCONF'][$_EXTKEY]['simulatestatic'] = array_key_exists('simulatestatic', $_EXTCONF) ? $_EXTCONF['simulatestatic'] : true;

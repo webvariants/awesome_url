@@ -9,3 +9,6 @@ charsReplaceWith = -_
 
 # cat=basic/enable; type=int; label=Max length on automatic title convert
 titleMax = 40
+
+# cat=basic/enable; type=boolean; label=accept "simulatestatic" urls
+simulatestatic = true
