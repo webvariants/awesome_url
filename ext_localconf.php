@@ -9,6 +9,10 @@ $TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_fe.php']['checkAlternativeIdMe
 
 $TYPO3_CONF_VARS['FE']['pageOverlayFields'] .= ',tx_awesome_url_alias,tx_awesome_url_exclude_sub';
 
+if (!preg_match('/(^|,)tstamp($|,)/', $TYPO3_CONF_VARS['FE']['addRootLineFields'])) {
+	$TYPO3_CONF_VARS['FE']['addRootLineFields'] .= ($TYPO3_CONF_VARS['FE']['addRootLineFields'] ? ',' : '') . 'tstamp';
+}
+
 $TYPO3_CONF_VARS['SC_OPTIONS']['tce']['formevals']['\WV\AwesomeUrl\Validate\Alias'] = 'EXT:awesome_url/Classes/Validate/Alias.php';
 
 $_EXTCONF = unserialize($_EXTCONF);

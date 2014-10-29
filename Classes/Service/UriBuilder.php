@@ -16,6 +16,7 @@ class UriBuilder {
 	 */
 	private $pageContext = null;
 	private $sys_language_uid = null;
+	private $time = null;
 
 	public function __construct() {
 		if (isset($GLOBALS['TSFE']) && is_object($GLOBALS['TSFE']) && is_object($GLOBALS['TSFE']->sys_page)) {
@@ -31,13 +32,21 @@ class UriBuilder {
 	 * @param array $domain_info array with pid, path_prefix, name
 	 * @param int $uid of page
 	 * @param int $sys_language_uid of page
+	 * @param int $last_change last change of elements in the rootline for better performance
 	 * @return string path
 	 */
-	public function pathFromPage($domain_info, $uid, $sys_language_uid = null) {
-		return $this->privatePathFromPage($domain_info, $uid, $sys_language_uid);
+	public function pathForPage($domain_info, $uid, $sys_language_uid = null, $last_change = null) {
+		return $this->privatePathForPage($domain_info, $uid, $sys_language_uid, $last_change);
 	}
 
-	private function privatePathFromPage($domain_info, $uid, $sys_language_uid = null, $private_recursion = 0) {
+	private function privatePathForPage($domain_info, $uid, $sys_language_uid = null, $last_change = null, $private_recursion = 0) {
+		if ($last_change) {
+			$active_entry = $this->findActive($uid, $sys_language_uid);
+			if ($active_entry && $last_change <= $active_entry['tstamp'] && $domain_info['name'] == $active_entry['domain_name']) {
+				return $active_entry['uri'];
+			}
+		}
+
 		if ($uid == $domain_info['pid']) {
 			$path = $domain_info['path_prefix'];
 		} else {
@@ -53,7 +62,7 @@ class UriBuilder {
 			} else {
 				$path = '';
 				if ($page['pid'] > 0) {
-					$path = $this->privatePathFromPage($domain_info, $page['pid'], $sys_language_uid, 1, $uid);
+					$path = $this->privatePathForPage($domain_info, $page['pid'], $sys_language_uid, 1, $uid);
 				}
 
 				if ($exclude) {
@@ -75,6 +84,11 @@ class UriBuilder {
 
 				if ($uri_entry['status'] == 1) {
 					// status active -> just return path (best case)
+
+					if ($last_change) {
+						// caching did not hit, we must update tstamp
+						$this->reactivate($uri_entry);
+					}
 				} else {
 					// not active -> let's reactivate the old entry
 					$this->reactivate($uri_entry);
@@ -83,7 +97,7 @@ class UriBuilder {
 				// entry is matching an other object (uid/sys_language_uid)
 				if ($uri_entry['status'] == 1) {
 					// the entry is active, so we must use a different name
-					$path = $this->name_suffix($domain_info['name'], $path, $uid, $sys_language_uid);
+					$path = $this->name_suffix($domain_info['name'], $path, $uid, $sys_language_uid, $last_change);
 				} else {
 					// the entry is not active, so we can take it over
 					$this->reuse($uri_entry, $uid, $sys_language_uid);
@@ -124,6 +138,16 @@ class UriBuilder {
 		$domain_name_safe = $db->fullQuoteStr($domain_name, 'tx_awesome_url_uri');
 		$uri_safe = $db->fullQuoteStr($uri, 'tx_awesome_url_uri');
 		$res = $db->exec_SELECTquery('uid,status,uid_foreign,sys_language_uid_foreign', 'tx_awesome_url_uri', "domain_name = $domain_name_safe AND uri = $uri_safe AND uri_depth = $uri_depth");
+		$row = $db->sql_fetch_assoc($res);
+		$db->sql_free_result($res);
+
+		return $row;
+	}
+
+	public function findActive($uid_foreign, $sys_language_uid_foreign) {
+		$db = $this->db();
+		$where = "status = 1 AND uid_foreign = $uid_foreign AND sys_language_uid_foreign = $sys_language_uid_foreign";
+		$res = $db->exec_SELECTquery('uid,domain_name,uri,status,uid_foreign,sys_language_uid_foreign,tstamp', 'tx_awesome_url_uri', $where);
 		$row = $db->sql_fetch_assoc($res);
 		$db->sql_free_result($res);
 
@@ -211,7 +235,8 @@ class UriBuilder {
 			'uri_depth' => $uri_depth,
 			'status' => $status,
 			'uid_foreign' => $uid_foreign,
-			'sys_language_uid_foreign' => $sys_language_uid_foreign
+			'sys_language_uid_foreign' => $sys_language_uid_foreign,
+			'tstamp' => $this->time()
 		));
 
 		$uid = $db->sql_insert_id();
@@ -230,7 +255,10 @@ class UriBuilder {
 		$uid_foreign = $uri_entry['uid_foreign'];
 		$sys_language_uid_foreign = $uri_entry['sys_language_uid_foreign'];
 
-		$res = $db->exec_UPDATEquery('tx_awesome_url_uri', "uid = $uid", array('status' => 1));
+		$res = $db->exec_UPDATEquery('tx_awesome_url_uri', "uid = $uid", array(
+			'status' => 1,
+			'tstamp' => $this->time()
+		));
 		$db->sql_free_result($res);
 
 		$this->deactivate($uid_foreign, $sys_language_uid_foreign, $uid);
@@ -243,19 +271,25 @@ class UriBuilder {
 		$res = $db->exec_UPDATEquery('tx_awesome_url_uri', "uid = $uid", array(
 			'status' => 1,
 			'uid_foreign' => $uid_foreign,
-			'sys_language_uid_foreign' => $sys_language_uid_foreign
+			'sys_language_uid_foreign' => $sys_language_uid_foreign,
+			'tstamp' => $this->time()
 		));
 		$db->sql_free_result($res);
 
 		$this->deactivate($uid_foreign, $sys_language_uid_foreign, $uid);
 	}
 
-	private function name_suffix($domain_name, $uri, $uid_foreign, $sys_language_uid_foreign) {
+	private function name_suffix($domain_name, $uri, $uid_foreign, $sys_language_uid_foreign, $last_change = null) {
 		// reuse entries for same target
 		$entries = $this->findStartingUriByDomaiNameUriFor($domain_name, $uri, $uid_foreign, $sys_language_uid_foreign);
 		$shortest = null;
 		foreach ($entries as $suffix => $entry) {
 			if ($entry['status'] == 1) {
+				if ($last_change) {
+					// caching did not hit, we must update tstamp
+					$this->reactivate($entry);
+				}
+
 				return $entry['uri'];
 			}
 
@@ -293,6 +327,16 @@ class UriBuilder {
 				}
 			}
 		}
+	}
+
+	private function time() {
+		// safe some kernel calls
+
+		if ($this->time === null) {
+			$this->time = time();
+		}
+
+		return $this->time;
 	}
 
 }

@@ -52,6 +52,11 @@ class Url {
 			$new_domain = null;
 			$new_scheme = null;
 
+			$tstamp_rootline = 0;
+			foreach ($target_rootline as $page_i) {
+				$tstamp_rootline = max($tstamp_rootline, $page_i['tstamp']);
+			}
+
 			if ($params['LD']['type']) {
 				$type = array();
 				parse_str($params['LD']['type'], $type);
@@ -81,7 +86,7 @@ class Url {
 
 			$urlParts = parse_url($params['LD']['totalURL']);
 
-			$urlParts['path'] = $this->uri_builder->pathFromPage($domain_info, $page['uid'], $target_language_uid);
+			$urlParts['path'] = $this->uri_builder->pathForPage($domain_info, $page['uid'], $target_language_uid, $tstamp_rootline);
 			$this->unsetLinkVar('id', $linkVarsArray);
 
 			if ($new_domain) {

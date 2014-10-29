@@ -41,6 +41,7 @@ CREATE TABLE tx_awesome_url_uri (
 	status int(1) DEFAULT '1' NOT NULL,
 	uid_foreign int(11) NOT NULL,
 	sys_language_uid_foreign int(11) NOT NULL,
+	tstamp int(11) DEFAULT '0' NOT NULL,
 
 	PRIMARY KEY (uid),
 	KEY tx_awesome_url_domain_idx1 (domain_name, uri, uri_depth, status),
