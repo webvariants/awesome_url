@@ -1,0 +1,11 @@
+# cat=basic/enable; type=string; label=Character whitelist (Regexp characters class syntax)
+charsWhitelist = A-Za-z0-9_\-
+
+# cat=basic/enable; type=string; label=Character whitelist for aliases (Regexp characters class syntax)
+charsWhitelistAlias = A-Za-z0-9_\-
+
+# cat=basic/enable; type=string; label=Replace with character, if more then one character is given groups of these characters will be joined together to first character
+charsReplaceWith = -_
+
+# cat=basic/enable; type=int; label=Max length on automatic title convert
+titleMax = 40

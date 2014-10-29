@@ -61,7 +61,7 @@ class UriBuilder {
 
 					return $path;
 				} else {
-					$path .= (strlen($path) ? '/' : '') . $this->fileNameASCIIPrefix($alias ? : $page['title']);
+					$path .= (strlen($path) ? '/' : '') . ($alias ? : $this->titleConvert($page['title']));
 				}
 			}
 		}
@@ -96,26 +96,18 @@ class UriBuilder {
 		return $path;
 	}
 
-	/**
-	 * Converts input string to an ASCII based file name prefix
-	 *
-	 * @param	string		String to base output on
-	 * @param	integer		Number of characters in the string
-	 * @param	string		Character to put in the end of string to merge it with the next value.
-	 * @return	string		Converted string
-	 */
-	public function fileNameASCIIPrefix($inTitle, $maxTitleChars = 40) {
-		$out = $GLOBALS['TSFE']->csConvObj->specCharsToASCII($GLOBALS['TSFE']->renderCharset, $inTitle);
+	private function titleConvert($title) {
+		$ret = $GLOBALS['TSFE']->csConvObj->specCharsToASCII($GLOBALS['TSFE']->renderCharset, $title);
 
 		// Get replacement character
-		$replacementChar = '-';
-		$replacementChars = '_\-' . ($replacementChar != '_' && $replacementChar != '-' ? $replacementChar : '');
-		$out = preg_replace('/[^' . self::CHAR_WHILTELIST . ']/', $replacementChar, trim(substr($out, 0, $maxTitleChars)));
-		$out = preg_replace('/([' . $replacementChars . ']){2,}/', '\1', $out);
-		$out = preg_replace('/[' . $replacementChars . ']?$/', '', $out);
-		$out = preg_replace('/^[' . $replacementChars . ']?/', '', $out);
+		$replacementChar = $this->getCharReplaceWith(true);
+		$replacementChars = $this->getCharReplaceWith(false);
+		$ret = preg_replace('/[^' . $this->getCharWhitelist() . ']/', $replacementChar, trim(substr($ret, 0, $this->getTitleMax())));
+		$ret = preg_replace('/([' . $replacementChars . ']){2,}/', $replacementChar, $ret); // groups of replacement chars
+		$ret = preg_replace('/[' . $replacementChars . ']?$/', '', $ret); // replacement chars at end
+		$ret = preg_replace('/^[' . $replacementChars . ']?/', '', $ret); // replacement chars at start
 
-		return strtolower($out);
+		return strtolower($ret);
 	}
 
 	/**
@@ -179,6 +171,27 @@ class UriBuilder {
 		$db->sql_free_result($res);
 
 		return $entries;
+	}
+
+	public function getCharWhitelist() {
+		return $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['awesome_url']['charsWhitelist'];
+	}
+
+	public function getCharWhitelistAlias() {
+		return $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['awesome_url']['charsWhitelistAlias'];
+	}
+
+	public function getCharReplaceWith($first_char = false) {
+		$chars = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['awesome_url']['charsReplaceWith'];
+		if ($first_char) {
+			return mb_substr($chars, 0, 1, 'UTF-8');
+		} else {
+			return $chars;
+		}
+	}
+
+	public function getTitleMax() {
+		return (int) $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['awesome_url']['titleMax'];
 	}
 
 	private function deactivate($uid_foreign, $sys_language_uid_foreign, $without_uid) {

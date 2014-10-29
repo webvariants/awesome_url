@@ -4,16 +4,22 @@ namespace WV\AwesomeUrl\Validate;
 
 // Registered in ext_localconf.php
 
-use WV\AwesomeUrl\Service\UriBuilder;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class Alias {
 
+	/**
+	 *
+	 * @var \WV\AwesomeUrl\Service\UriBuilder
+	 */
+	private $uri_builder = null;
+
 	public function __construct() {
-		
+		$this->uri_builder = GeneralUtility::makeInstance('WV\\AwesomeUrl\\Service\\UriBuilder');
 	}
 
 	public function returnFieldJS() {
-		$whitelist = UriBuilder::CHAR_WHILTELIST;
+		$whitelist = $this->uri_builder->getCharWhitelistAlias();
 		$length = $this->getLength();
 		return ""
 				. "var awesome_url_alias = value.replace(/[^$whitelist\/]/g, '').replace(/\/{2,}/g, '/');"
@@ -29,7 +35,7 @@ class Alias {
 
 		$set = true;
 
-		$whitelist = UriBuilder::CHAR_WHILTELIST;
+		$whitelist = $this->uri_builder->getCharWhitelistAlias();
 
 		if ($set && !preg_match("#^[$whitelist/]*$#", $trim)) {
 			$set = false;
