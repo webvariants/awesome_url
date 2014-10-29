@@ -8,6 +8,8 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class UriBuilder {
 
+	const CHAR_WHILTELIST = 'A-Za-z0-9_\-';
+
 	/**
 	 *
 	 * @var \TYPO3\CMS\Frontend\Page\PageRepository
@@ -44,18 +46,23 @@ class UriBuilder {
 				$page = $this->pageContext->getPageOverlay($page, $sys_language_uid);
 			}
 
-			$path = '';
-			if ($page['pid'] > 0) {
-				$path = $this->privatePathFromPage($domain_info, $page['pid'], $sys_language_uid, 1, $uid);
-			}
-
-			if ($private_recursion && $page['tx_awesome_url_exclude_sub']) {
-				// on exclusion we do not need to save the path, so just return the $path now
-
-				return $path;
+			$alias = trim($page['tx_awesome_url_alias']);
+			$exclude = $private_recursion && $page['tx_awesome_url_exclude_sub'];
+			if (!$exclude && mb_strpos($alias, '/') === 0) {
+				$path = mb_substr($alias, 1, 255, 'UTF-8');
 			} else {
-				$alias = trim($page['tx_awesome_url_alias']);
-				$path .= (strlen($path) ? '/' : '') . $this->fileNameASCIIPrefix($alias ? : $page['title']);
+				$path = '';
+				if ($page['pid'] > 0) {
+					$path = $this->privatePathFromPage($domain_info, $page['pid'], $sys_language_uid, 1, $uid);
+				}
+
+				if ($exclude) {
+					// on exclusion we do not need to save the path, so just return the $path now
+
+					return $path;
+				} else {
+					$path .= (strlen($path) ? '/' : '') . $this->fileNameASCIIPrefix($alias ? : $page['title']);
+				}
 			}
 		}
 
@@ -103,7 +110,7 @@ class UriBuilder {
 		// Get replacement character
 		$replacementChar = '-';
 		$replacementChars = '_\-' . ($replacementChar != '_' && $replacementChar != '-' ? $replacementChar : '');
-		$out = preg_replace('/[^A-Za-z0-9_-]/', $replacementChar, trim(substr($out, 0, $maxTitleChars)));
+		$out = preg_replace('/[^' . self::CHAR_WHILTELIST . ']/', $replacementChar, trim(substr($out, 0, $maxTitleChars)));
 		$out = preg_replace('/([' . $replacementChars . ']){2,}/', '\1', $out);
 		$out = preg_replace('/[' . $replacementChars . ']?$/', '', $out);
 		$out = preg_replace('/^[' . $replacementChars . ']?/', '', $out);
@@ -174,6 +181,13 @@ class UriBuilder {
 		return $entries;
 	}
 
+	private function deactivate($uid_foreign, $sys_language_uid_foreign, $without_uid) {
+		$db = $this->db();
+
+		$res = $db->exec_UPDATEquery('tx_awesome_url_uri', "status = 1 AND uid_foreign = $uid_foreign AND sys_language_uid_foreign = $sys_language_uid_foreign AND uid != $without_uid", array('status' => 0));
+		$db->sql_free_result($res);
+	}
+
 	private function insert($domain_name, $uri, $status, $uid_foreign, $sys_language_uid_foreign) {
 		$db = $this->db();
 		$uri_depth = count(explode('/', $uri));
@@ -190,6 +204,10 @@ class UriBuilder {
 		$uid = $db->sql_insert_id();
 		$db->sql_free_result($res);
 
+		if ($uid) {
+			$this->deactivate($uid_foreign, $sys_language_uid_foreign, $uid);
+		}
+
 		return $uid;
 	}
 
@@ -202,8 +220,7 @@ class UriBuilder {
 		$res = $db->exec_UPDATEquery('tx_awesome_url_uri', "uid = $uid", array('status' => 1));
 		$db->sql_free_result($res);
 
-		$res = $db->exec_UPDATEquery('tx_awesome_url_uri', "status = 1 AND uid_foreign = $uid_foreign AND sys_language_uid_foreign = $sys_language_uid_foreign AND uid != $uid", array('status' => 0));
-		$db->sql_free_result($res);
+		$this->deactivate($uid_foreign, $sys_language_uid_foreign, $uid);
 	}
 
 	private function reuse($uri_entry, $uid_foreign, $sys_language_uid_foreign) {
@@ -217,8 +234,7 @@ class UriBuilder {
 		));
 		$db->sql_free_result($res);
 
-		$res = $db->exec_UPDATEquery('tx_awesome_url_uri', "status = 1 AND uid_foreign = $uid_foreign AND sys_language_uid_foreign = $sys_language_uid_foreign AND uid != $uid", array('status' => 0));
-		$db->sql_free_result($res);
+		$this->deactivate($uid_foreign, $sys_language_uid_foreign, $uid);
 	}
 
 	private function name_suffix($domain_name, $uri, $uid_foreign, $sys_language_uid_foreign) {
@@ -260,11 +276,6 @@ class UriBuilder {
 				$entry_uid = $this->insert($domain_name, $uri_suffix, 1, $uid_foreign, $sys_language_uid_foreign);
 
 				if ($entry_uid) {
-					// if insert went fine, deactivate old entries for target
-
-					$res = $db->exec_UPDATEquery('tx_awesome_url_uri', "status = 1 AND uid_foreign = $uid_foreign AND sys_language_uid_foreign = $sys_language_uid_foreign AND uid != $entry_uid", array('status' => 0));
-					$db->sql_free_result($res);
-
 					return $uri_suffix;
 				}
 			}

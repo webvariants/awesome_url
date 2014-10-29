@@ -94,6 +94,7 @@ $GLOBALS['TCA']['tx_awesome_url_domain'] = array(
 		'config' => array(
 			'type' => 'input',
 			'size' => '40',
+			'eval' => '\WV\AwesomeUrl\Validate\Alias'
 		)
 	)
 ));
@@ -123,6 +124,7 @@ $GLOBALS['TCA']['tx_awesome_url_domain'] = array(
 		'config' => array(
 			'type' => 'input',
 			'size' => '40',
+			'eval' => '\WV\AwesomeUrl\Validate\Alias'
 		)
 	)
 ));
