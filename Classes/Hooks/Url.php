@@ -118,6 +118,10 @@ class Url {
 			$uParts = parse_url($parentObject->siteScript);
 			$path = $uParts['path'];
 
+			$can_redirect = $_SERVER['REQUEST_METHOD'] === 'GET' || $_SERVER['REQUEST_METHOD'] === 'HEAD';
+			$hit = false;
+			$redirect_language_uid = null;
+
 			$simulatestatic = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['awesome_url']['simulatestatic'];
 			if ($simulatestatic && $path) {
 				if (substr($path, -5) == '.html') {
@@ -130,21 +134,76 @@ class Url {
 							$parentObject->id = $matches[2];
 						}
 
-						return;
+						$hit = true;
+
+						if ($can_redirect) {
+							if ($parentObject->type) {
+								$_GET['type'] = $parentObject->type;
+							}
+						} else {
+							return;
+						}
 					}
 				}
 			}
 
-			$uri_entry = $this->uri_builder->findUriByDomaiNameUri(GeneralUtility::getIndpEnv('HTTP_HOST'), $path);
-			if ($uri_entry) {
-//				$parentObject->type = 0;
-				$parentObject->id = $uri_entry['uid_foreign'];
-//				$parentObject->sys_language_uid = $uri_entry['sys_language_uid_foreign']; // seems not nessesary
-				if ($uri_entry['sys_language_uid_foreign']) {
-					$_GET['L'] = $uri_entry['sys_language_uid_foreign'];
+			if (!$hit) {
+				$uri_entry = $this->uri_builder->findUriByDomaiNameUri(GeneralUtility::getIndpEnv('HTTP_HOST'), $path);
+				if ($uri_entry) {
+//					$parentObject->type = 0;
+					$parentObject->id = $uri_entry['uid_foreign'];
+//					$parentObject->sys_language_uid = $uri_entry['sys_language_uid_foreign']; // seems not nessesary
+					if ($uri_entry['sys_language_uid_foreign']) {
+						$_GET['L'] = $uri_entry['sys_language_uid_foreign'];
+					}
+
+					if ($uri_entry['status'] == 1) {
+						$can_redirect = false;
+					}
+
+					$hit = true;
+					$redirect_language_uid = (int) GeneralUtility::_GET('L');
 				}
 			}
+
+			if ($can_redirect && $hit) {
+				$this->redirect((int) $parentObject->id, $redirect_language_uid);
+			}
 		}
+	}
+
+	private function redirect($uid, $sys_language_uid = null) {
+		$target_rootline = $this->pageContext->getRootLine($uid);
+		if (!$target_rootline) {
+
+			return;
+		}
+		$target_site_uid = (int) $target_rootline[0]['uid'];
+
+		$domain_info = $this->fetchDomainInfo($target_site_uid, $sys_language_uid, $sys_language_uid === null ? GeneralUtility::getIndpEnv('HTTP_HOST') : null);
+
+		if (!$domain_info) {
+			// without domain info we can not generate urls
+			
+			return;
+		}
+
+		if ($sys_language_uid === null) {
+			if ($domain_info['is_language_domain']) {
+				$sys_language_uid = $domain_info['sys_language_uid'];
+			} else {
+				$sys_language_uid = 0;
+			}
+		}
+
+		$query = ltrim(GeneralUtility::implodeArrayForUrl('', $_GET, '', false, true), '&');
+		if ($query !== '') {
+			$query = '?' . $query;
+		}
+
+		$requestUrlScheme = parse_url(GeneralUtility::getIndpEnv('TYPO3_REQUEST_URL'), PHP_URL_SCHEME);
+		$path = $this->uri_builder->pathForPage($domain_info, $uid, $sys_language_uid);
+		HttpUtility::redirect(($requestUrlScheme ? : 'http') . '://' . $domain_info['name'] . '/' . $path . $query, HttpUtility::HTTP_STATUS_301);
 	}
 
 	/**
@@ -155,7 +214,7 @@ class Url {
 		return $GLOBALS['TYPO3_DB'];
 	}
 
-	private function fetchDomainInfo($target_site_uid, $target_language_uid) {
+	private function fetchDomainInfo($target_site_uid, $target_language_uid = null, $domain_name = null) {
 		$db = $this->db();
 		$target_site_uid_safe = $db->fullQuoteStr($target_site_uid, 'sys_domain');
 		$res = $db->exec_SELECTquery('sys_domain.domainName,tx_awesome_url_domain.path_prefix,tx_awesome_url_domain.sys_language_uid', 'sys_domain,tx_awesome_url_domain', "sys_domain.uid = tx_awesome_url_domain.uid_foreign AND sys_domain.hidden = 0 AND tx_awesome_url_domain.deleted = 0 AND sys_domain.pid = $target_site_uid_safe", '', 'sys_domain.sorting ASC,tx_awesome_url_domain.sorting ASC');
@@ -166,7 +225,7 @@ class Url {
 		while ((!$targetDomain) && ($row = $db->sql_fetch_assoc($res))) {
 			$row_sys_language_uid = $row['sys_language_uid'];
 
-			if ($row_sys_language_uid == -1 || $row_sys_language_uid == $target_language_uid) {
+			if (($row_sys_language_uid == -1 || $target_language_uid === null || $row_sys_language_uid == $target_language_uid) && ($domain_name === null || $domain_name == $row['domainName'])) {
 				$targetDomain = $row['domainName'];
 				$path_prefix = trim($row['path_prefix'], "/ \t");
 				if ($path_prefix) {
@@ -188,7 +247,8 @@ class Url {
 			'name' => $targetDomain,
 			'pid' => $target_site_uid,
 			'path_prefix' => $path_prefix,
-			'is_language_domain' => $is_language_domain
+			'is_language_domain' => $is_language_domain,
+			'sys_language_uid' => $row_sys_language_uid
 		);
 	}
 
