@@ -6,7 +6,7 @@ if (!defined('TYPO3_MODE')) {
 
 $GLOBALS['TCA']['tx_awesome_url_domain'] = array(
 	'ctrl' => array(
-		'title' => 'Awesome URL domain',
+		'title' => 'LLL:EXT:awesome_url/Resources/Private/Language/locallang.xlf:tableDomainTitle',
 		'label' => 'path_prefix',
 		'label_alt' => 'sys_language_uid',
 		'label_alt_force' => true,
@@ -38,11 +38,11 @@ $GLOBALS['TCA']['tx_awesome_url_domain'] = array(
 		),
 		'path_prefix' => array(
 			'exclude' => 0,
-			'label' => 'URL Prefix',
+			'label' => 'LLL:EXT:awesome_url/Resources/Private/Language/locallang.xlf:labelPathPrefix',
 			'config' => array(
 				'type' => 'input',
 				'size' => '40',
-//				'eval' => 'required',
+				'eval' => '\WV\AwesomeUrl\Validate\Alias'
 			)
 		),
 	),
@@ -57,7 +57,7 @@ $GLOBALS['TCA']['tx_awesome_url_domain'] = array(
 \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTCAcolumns('sys_domain', array(
 	'tx_awesome_url_domain' => array(
 		'exclude' => 1,
-		'label' => 'Awesome URL Mapping',
+		'label' => 'LLL:EXT:awesome_url/Resources/Private/Language/locallang.xlf:tableDomainTitle',
 		'config' => array(
 			// http://docs.typo3.org/typo3cms/TCAReference/Reference/Columns/Inline/
 			'type' => 'inline',
@@ -66,7 +66,7 @@ $GLOBALS['TCA']['tx_awesome_url_domain'] = array(
 			'foreign_field' => 'uid_foreign',
 			'appearance' => array(
 				'collapseAll' => true,
-				'newRecordLinkTitle' => 'Mapping hinzufügen',
+				'newRecordLinkTitle' => 'LLL:EXT:awesome_url/Resources/Private/Language/locallang.xlf:addMapping',
 				'enabledControls' => array(
 					'info' => false,
 					'new' => true,
@@ -90,7 +90,7 @@ $GLOBALS['TCA']['tx_awesome_url_domain'] = array(
 \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTCAcolumns('pages', array(
 	'tx_awesome_url_alias' => array(
 		'exclude' => 0,
-		'label' => 'Awesome URL alias',
+		'label' => 'LLL:EXT:awesome_url/Resources/Private/Language/locallang.xlf:labelAlias',
 		'config' => array(
 			'type' => 'input',
 			'size' => '40',
@@ -102,12 +102,12 @@ $GLOBALS['TCA']['tx_awesome_url_domain'] = array(
 \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTCAcolumns('pages', array(
 	'tx_awesome_url_exclude_sub' => array(
 		'exclude' => 0,
-		'label' => 'Awesome URL in subpages',
+		'label' => 'LLL:EXT:awesome_url/Resources/Private/Language/locallang.xlf:labelExcludeSub',
 		'config' => array(
 			'type' => 'check',
 			'items' => array(
 				'1' => array(
-					'0' => 'hide'
+					'0' => 'LLL:EXT:awesome_url/Resources/Private/Language/locallang.xlf:labelExcludeSubHide'
 				)
 			)
 		)
@@ -120,7 +120,7 @@ $GLOBALS['TCA']['tx_awesome_url_domain'] = array(
 \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTCAcolumns('pages_language_overlay', array(
 	'tx_awesome_url_alias' => array(
 		'exclude' => 0,
-		'label' => 'Awesome URL alias',
+		'label' => 'LLL:EXT:awesome_url/Resources/Private/Language/locallang.xlf:labelAlias',
 		'config' => array(
 			'type' => 'input',
 			'size' => '40',
@@ -132,12 +132,12 @@ $GLOBALS['TCA']['tx_awesome_url_domain'] = array(
 \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTCAcolumns('pages_language_overlay', array(
 	'tx_awesome_url_exclude_sub' => array(
 		'exclude' => 0,
-		'label' => 'Awesome URL in subpages',
+		'label' => 'LLL:EXT:awesome_url/Resources/Private/Language/locallang.xlf:labelExcludeSub',
 		'config' => array(
 			'type' => 'check',
 			'items' => array(
 				'1' => array(
-					'0' => 'hide'
+					'0' => 'LLL:EXT:awesome_url/Resources/Private/Language/locallang.xlf:labelExcludeSubHide'
 				)
 			)
 		)

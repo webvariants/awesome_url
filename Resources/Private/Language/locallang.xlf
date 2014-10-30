@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.0">
+	<file source-language="en" datatype="plaintext" original="messages" date="2014-10-30T12:00:00Z" product-name="awesome_url">
+		<header/>
+		<body>
+			<trans-unit id="tableDomainTitle" xml:space="preserve">
+				<source>Awesome URL domain mapping</source>
+			</trans-unit>
+			<trans-unit id="addMapping" xml:space="preserve">
+				<source>Add domain mapping</source>
+			</trans-unit>
+			<trans-unit id="labelPathPrefix" xml:space="preserve">
+				<source>prefix</source>
+			</trans-unit>
+			<trans-unit id="labelAlias" xml:space="preserve">
+				<source>URL alias</source>
+			</trans-unit>
+			<trans-unit id="labelExcludeSub" xml:space="preserve">
+				<source>URL part in subpages</source>
+			</trans-unit>
+			<trans-unit id="labelExcludeSubHide" xml:space="preserve">
+				<source>hide</source>
+			</trans-unit>
+		</body>
+	</file>
+</xliff>
