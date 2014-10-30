@@ -228,9 +228,6 @@ class Url {
 			if (($row_sys_language_uid == -1 || $target_language_uid === null || $row_sys_language_uid == $target_language_uid) && ($domain_name === null || $domain_name == $row['domainName'])) {
 				$targetDomain = $row['domainName'];
 				$path_prefix = trim($row['path_prefix'], "/ \t");
-				if ($path_prefix) {
-					$path_prefix = '/' . $path_prefix;
-				}
 				if ($row_sys_language_uid > -1) {
 					$is_language_domain = true;
 				}
