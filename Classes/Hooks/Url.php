@@ -118,13 +118,22 @@ class Url {
 	 * @return void
 	 */
 	public function checkAlternativeIdMethodsPost(array &$parameters, &$parentObject) {
-		if (substr($parentObject->siteScript, 0, 9) != 'index.php') {
-			$uParts = parse_url($parentObject->siteScript);
-			$path = $uParts['path'];
+		$siteScript = $parentObject->siteScript;
 
-			$can_redirect = $_SERVER['REQUEST_METHOD'] === 'GET' || $_SERVER['REQUEST_METHOD'] === 'HEAD';
-			$hit = false;
-			$redirect_language_uid = null;
+		$can_redirect = $_SERVER['REQUEST_METHOD'] === 'GET' || $_SERVER['REQUEST_METHOD'] === 'HEAD';
+		$hit = false;
+		$redirect_language_uid = null;
+		$exclude_query_params = array();
+
+		if (substr($siteScript, 0, 9) == 'index.php') {
+			if ($can_redirect && $parentObject->id && $parentObject->id == GeneralUtility::_GET('id')) {
+				$redirect_language_uid = (int) GeneralUtility::_GET('L');
+				$exclude_query_params[] = 'id';
+				$exclude_query_params[] = 'L';
+				$hit = true;
+			}
+		} else {
+			$path = parse_url($siteScript, PHP_URL_PATH);
 
 			$simulatestatic = $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['awesome_url']['simulatestatic'];
 			if ($simulatestatic && $path) {
@@ -169,14 +178,14 @@ class Url {
 					$redirect_language_uid = (int) GeneralUtility::_GET('L');
 				}
 			}
+		}
 
-			if ($can_redirect && $hit) {
-				$this->redirect((int) $parentObject->id, $redirect_language_uid);
-			}
+		if ($can_redirect && $hit) {
+			$this->redirect((int) $parentObject->id, $redirect_language_uid, $exclude_query_params);
 		}
 	}
 
-	private function redirect($uid, $sys_language_uid = null) {
+	private function redirect($uid, $sys_language_uid = null, $exlcude_query_params = array()) {
 		$target_rootline = $this->pageContext->getRootLine($uid);
 		if (!$target_rootline) {
 
@@ -200,7 +209,16 @@ class Url {
 			}
 		}
 
-		$query = ltrim(GeneralUtility::implodeArrayForUrl('', $_GET, '', false, true), '&');
+		$query_array = $_GET;
+		if ($exlcude_query_params) {
+			foreach ($exlcude_query_params as $param) {
+				if (array_key_exists($param, $query_array)) {
+					unset($query_array[$param]);
+				}
+			}
+		}
+
+		$query = ltrim(GeneralUtility::implodeArrayForUrl('', $query, '', false, true), '&');
 		if ($query !== '') {
 			$query = '?' . $query;
 		}
