@@ -24,16 +24,16 @@ class UriBuilder {
 	 * @var \TYPO3\CMS\Frontend\Page\PageRepository
 	 */
 	private $pageContext = null;
-	private $sys_language_uid = null;
+
+	/**
+	 * @var \TYPO3\CMS\Core\Charset\CharsetConverter
+	 */
+	private $csConvObj = null;
 	private $time = null;
 
 	public function __construct() {
-		if (isset($GLOBALS['TSFE']) && is_object($GLOBALS['TSFE']) && is_object($GLOBALS['TSFE']->sys_page)) {
-			$this->pageContext = $GLOBALS['TSFE']->sys_page;
-			$this->sys_language_uid = (int) $GLOBALS['TSFE']->sys_language_uid;
-		} else {
-			$this->pageContext = GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Page\\PageRepository');
-		}
+		$this->pageContext = GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Page\\PageRepository');
+		$this->csConvObj = GeneralUtility::makeInstance('TYPO3\\CMS\\Core\\Charset\\CharsetConverter');
 	}
 
 	/**
@@ -120,7 +120,7 @@ class UriBuilder {
 	}
 
 	private function titleConvert($title) {
-		$ret = $GLOBALS['TSFE']->csConvObj->specCharsToASCII($GLOBALS['TSFE']->renderCharset, $title);
+		$ret = $this->csConvObj->specCharsToASCII('utf-8', $title);
 
 		// Get replacement character
 		$replacementChar = $this->getCharReplaceWith(true);

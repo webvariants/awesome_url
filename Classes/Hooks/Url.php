@@ -31,12 +31,7 @@ class Url {
 	private $uri_builder = null;
 
 	public function __construct() {
-		if (isset($GLOBALS['TSFE']) && is_object($GLOBALS['TSFE']) && is_object($GLOBALS['TSFE']->sys_page)) {
-			$this->pageContext = $GLOBALS['TSFE']->sys_page;
-		} else {
-			$this->pageContext = GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Page\\PageRepository');
-		}
-
+		$this->pageContext = GeneralUtility::makeInstance('TYPO3\\CMS\\Frontend\\Page\\PageRepository');
 		$this->uri_builder = GeneralUtility::makeInstance('WV\\AwesomeUrl\\Service\\UriBuilder');
 	}
 
