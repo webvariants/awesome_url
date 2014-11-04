@@ -17,8 +17,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class UriBuilder {
 
-	const CHAR_WHILTELIST = 'A-Za-z0-9_\-';
-
 	/**
 	 *
 	 * @var \TYPO3\CMS\Frontend\Page\PageRepository
