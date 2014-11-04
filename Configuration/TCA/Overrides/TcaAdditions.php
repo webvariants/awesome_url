@@ -26,6 +26,7 @@ $GLOBALS['TCA']['tx_awesome_url_domain'] = array(
 		'languageField' => -1,
 		'sortby' => 'sorting',
 		'delete' => 'deleted',
+		'hideTable' => true,
 		'enablecolumns' => array(
 			'disabled' => 'hidden',
 		),
@@ -33,7 +34,7 @@ $GLOBALS['TCA']['tx_awesome_url_domain'] = array(
 	),
 	'columns' => array(
 		'sys_language_uid' => array(
-			'exclude' => 1,
+			'exclude' => 0,
 			'label' => 'LLL:EXT:lang/locallang_general.xml:LGL.language',
 			'config' => array(
 				'type' => 'select',
@@ -98,7 +99,7 @@ $GLOBALS['TCA']['tx_awesome_url_domain'] = array(
 
 \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTCAcolumns('pages', array(
 	'tx_awesome_url_alias' => array(
-		'exclude' => 0,
+		'exclude' => 1,
 		'label' => 'LLL:EXT:awesome_url/Resources/Private/Language/locallang.xlf:labelAlias',
 		'config' => array(
 			'type' => 'input',
@@ -110,7 +111,7 @@ $GLOBALS['TCA']['tx_awesome_url_domain'] = array(
 
 \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTCAcolumns('pages', array(
 	'tx_awesome_url_exclude_sub' => array(
-		'exclude' => 0,
+		'exclude' => 1,
 		'label' => 'LLL:EXT:awesome_url/Resources/Private/Language/locallang.xlf:labelExcludeSub',
 		'config' => array(
 			'type' => 'check',
@@ -128,7 +129,7 @@ $GLOBALS['TCA']['tx_awesome_url_domain'] = array(
 
 \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTCAcolumns('pages_language_overlay', array(
 	'tx_awesome_url_alias' => array(
-		'exclude' => 0,
+		'exclude' => 1,
 		'label' => 'LLL:EXT:awesome_url/Resources/Private/Language/locallang.xlf:labelAlias',
 		'config' => array(
 			'type' => 'input',
@@ -140,7 +141,7 @@ $GLOBALS['TCA']['tx_awesome_url_domain'] = array(
 
 \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTCAcolumns('pages_language_overlay', array(
 	'tx_awesome_url_exclude_sub' => array(
-		'exclude' => 0,
+		'exclude' => 1,
 		'label' => 'LLL:EXT:awesome_url/Resources/Private/Language/locallang.xlf:labelExcludeSub',
 		'config' => array(
 			'type' => 'check',
