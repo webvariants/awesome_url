@@ -218,7 +218,7 @@ class Url {
 			}
 		}
 
-		$query = ltrim(GeneralUtility::implodeArrayForUrl('', $query, '', false, true), '&');
+		$query = ltrim(GeneralUtility::implodeArrayForUrl('', $query_array, '', false, true), '&');
 		if ($query !== '') {
 			$query = '?' . $query;
 		}
