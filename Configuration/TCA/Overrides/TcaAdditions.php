@@ -30,7 +30,7 @@ $GLOBALS['TCA']['tx_awesome_url_domain'] = array(
 		'enablecolumns' => array(
 			'disabled' => 'hidden',
 		),
-		'iconfile' => \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('awesome_url') . 'ext_icon.gif',
+		'iconfile' => \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::extRelPath('awesome_url') . 'ext_icon.png',
 	),
 	'columns' => array(
 		'sys_language_uid' => array(
