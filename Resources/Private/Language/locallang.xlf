@@ -21,6 +21,12 @@
 			<trans-unit id="labelExcludeSubHide" xml:space="preserve">
 				<source>hide</source>
 			</trans-unit>
+			<trans-unit id="tx_awesome_url_alias.description" xml:space="preserve">
+				<source>If you do not like the URL derivated by the page title you can fill in an alias here. If you start the alias with a slash character (/) you override the whole path from the beginning.</source>
+			</trans-unit>
+			<trans-unit id="tx_awesome_url_exclude_sub.description" xml:space="preserve">
+				<source>If you check "hide" the title or alias will not be part of subpage URLs.</source>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

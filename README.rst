@@ -79,3 +79,9 @@ If you do not like the URL derivated by the page title you can fill in the "URL 
 alias with a slash character (/) you override the whole path from the beginning.
 
 If you check "hide URL part in subpages" the title or alias will not be part of subpage URLs.
+
+Template Setup
+--------------
+
+Your template must set a `base tag <http://www.w3schools.com/tags/tag_base.asp>`_
+. Usually done with **config.baseURL = /** in typoscript.
