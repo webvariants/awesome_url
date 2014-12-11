@@ -139,22 +139,28 @@ class Url {
 			if ($simulatestatic && $path) {
 				if (substr($path, -5) == '.html') {
 					if (preg_match('/(.(\d+))?\.(\d+)\.html$/', $path, $matches)) {
+						$id = false;
 						if ($matches[2] === '') {
-							$parentObject->type = 0;
-							$parentObject->id = $matches[3];
+							$type = 0;
+							$id = $matches[3];
 						} else {
-							$parentObject->type = $matches[3];
-							$parentObject->id = $matches[2];
+							$type = $matches[3];
+							$id = $matches[2];
 						}
 
-						$hit = true;
+						if ($id && $this->pageContext->getPage($id)) {
+							$parentObject->type = $type;
+							$parentObject->id = $id;
 
-						if ($can_redirect) {
-							if ($parentObject->type) {
-								$_GET['type'] = $parentObject->type;
+							$hit = true;
+
+							if ($can_redirect) {
+								if ($parentObject->type) {
+									$_GET['type'] = $parentObject->type;
+								}
+							} else {
+								return;
 							}
-						} else {
-							return;
 						}
 					}
 				}
