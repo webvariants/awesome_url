@@ -69,7 +69,7 @@ class UriBuilder {
 			} else {
 				$path = '';
 				if ($page['pid'] > 0) {
-					$path = $this->privatePathForPage($domain_info, $page['pid'], $sys_language_uid, 1, $uid);
+					$path = $this->privatePathForPage($domain_info, $page['pid'], $sys_language_uid, $last_change, $uid);
 				}
 
 				if ($exclude) {
