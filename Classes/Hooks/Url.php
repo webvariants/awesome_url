@@ -167,7 +167,8 @@ class Url {
 			}
 
 			if (!$hit) {
-				$uri_entry = $this->uri_builder->findUriByDomaiNameUri(GeneralUtility::getIndpEnv('HTTP_HOST'), $path);
+				$domain_name = GeneralUtility::getIndpEnv('HTTP_HOST');
+				$uri_entry   = $this->uri_builder->findUriByDomaiNameUri($domain_name, $path);
 				if ($uri_entry) {
 //					$parentObject->type = 0;
 					$parentObject->id = $uri_entry['uid_foreign'];
@@ -183,7 +184,7 @@ class Url {
 					$hit = true;
 					$redirect_language_uid = (int) GeneralUtility::_GET('L');
 				}
-				else {
+				elseif ($this->hasUrlDomain($domain_name)) {
 					// Call handler
 					$parentObject->pageNotFoundAndExit('Couldn\'t map alias "'.$path.'" to an ID');
 				}
@@ -244,6 +245,19 @@ class Url {
 	 */
 	private function db() {
 		return $GLOBALS['TYPO3_DB'];
+	}
+
+	private function hasUrlDomain($domain_name) {
+		$db               = $this->db();
+		$domain_name_safe = $db->fullQuoteStr($domain_name, 'sys_domain');
+		$res              = $db->exec_SELECTquery('*', 'sys_domain', "hidden = 0 AND domainName = $domain_name_safe");
+		$rows             = $db->sql_fetch_row($res);
+		$db->sql_free_result($res);
+
+		if (!$rows) {
+			return FALSE;
+		}
+		return TRUE;
 	}
 
 	private function fetchDomainInfo($target_site_uid, $target_language_uid = null, $domain_name = null) {
