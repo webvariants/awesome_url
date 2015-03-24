@@ -183,6 +183,10 @@ class Url {
 					$hit = true;
 					$redirect_language_uid = (int) GeneralUtility::_GET('L');
 				}
+				else {
+					// Call handler
+					$parentObject->pageNotFoundAndExit('Couldn\'t map alias "'.$path.'" to an ID');
+				}
 			}
 		}
 
