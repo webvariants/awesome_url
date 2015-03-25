@@ -250,8 +250,13 @@ class Url {
 	private function hasUrlDomain($domain_name) {
 		$db               = $this->db();
 		$domain_name_safe = $db->fullQuoteStr($domain_name, 'sys_domain');
-		$res              = $db->exec_SELECTquery('*', 'sys_domain', "hidden = 0 AND domainName = $domain_name_safe");
-		$rows             = $db->sql_fetch_row($res);
+		$res              = $db->exec_SELECTquery(
+			'*',
+			'sys_domain',
+			"hidden = 0 AND domainName = $domain_name_safe AND tx_awesome_url_domain > 0"
+		);
+		$rows             = $db->sql_fetch_assoc($res);
+
 		$db->sql_free_result($res);
 
 		if (!$rows) {
