@@ -5,7 +5,7 @@ Awesome URL
 ********
 Features
 ********
-
+- Compatible with Typo3 6.2
 - Easy configuration via backend
 - Speaking URLs
 - Page language by domain name or path prefix
@@ -85,3 +85,8 @@ Template Setup
 
 Your template must set a `base tag <http://www.w3schools.com/tags/tag_base.asp>`_
 . Usually done with **config.baseURL = /** in typoscript.
+
+URL rewriting
+-------------
+
+Do not forget to enable URL rewriting. See _.htaccess if you are using apache.
