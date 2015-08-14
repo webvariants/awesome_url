@@ -181,6 +181,12 @@ class Url {
 						$can_redirect = false;
 					}
 
+					$redirectId = $this->getRedirect($parentObject->id);
+					if ($redirectId) {
+						$can_redirect = true;
+						$parentObject->id = $redirectId;
+					}
+
 					$hit = true;
 					$redirect_language_uid = (int) GeneralUtility::_GET('L');
 				}
@@ -263,6 +269,24 @@ class Url {
 			return FALSE;
 		}
 		return TRUE;
+	}
+
+	private function getRedirect($uid) {
+		$db       = $this->db();
+		$uid_safe = $db->fullQuoteStr($uid, 'pages');
+		$res      = $db->exec_SELECTquery(
+			'shortcut',
+			'pages',
+			"uid = $uid_safe"
+		);
+		$rows = $db->sql_fetch_assoc($res);
+
+		$db->sql_free_result($res);
+
+		if ($rows && isset($rows['shortcut'])) {
+			return intval($rows['shortcut']);
+		}
+		return FALSE;
 	}
 
 	private function fetchDomainInfo($target_site_uid, $target_language_uid = null, $domain_name = null) {
