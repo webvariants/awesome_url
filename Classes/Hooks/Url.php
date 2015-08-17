@@ -274,10 +274,11 @@ class Url {
 	private function getRedirect($uid) {
 		$db       = $this->db();
 		$uid_safe = $db->fullQuoteStr($uid, 'pages');
+		$doktype  = \TYPO3\CMS\Frontend\Page\PageRepository::DOKTYPE_SHORTCUT;
 		$res      = $db->exec_SELECTquery(
 			'shortcut',
 			'pages',
-			"uid = $uid_safe"
+			"uid = $uid_safe AND doktype = $doktype"
 		);
 		$rows = $db->sql_fetch_assoc($res);
 
