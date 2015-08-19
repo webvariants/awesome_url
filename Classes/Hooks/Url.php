@@ -272,20 +272,10 @@ class Url {
 	}
 
 	private function getRedirect($uid) {
-		$db       = $this->db();
-		$uid_safe = $db->fullQuoteStr($uid, 'pages');
-		$doktype  = \TYPO3\CMS\Frontend\Page\PageRepository::DOKTYPE_SHORTCUT;
-		$res      = $db->exec_SELECTquery(
-			'shortcut',
-			'pages',
-			"uid = $uid_safe AND doktype = $doktype"
-		);
-		$rows = $db->sql_fetch_assoc($res);
+		$page = $this->pageContext->getPage($uid);
 
-		$db->sql_free_result($res);
-
-		if ($rows && isset($rows['shortcut'])) {
-			return intval($rows['shortcut']);
+		if ($page && $page['doktype'] == \TYPO3\CMS\Frontend\Page\PageRepository::DOKTYPE_SHORTCUT && isset($page['shortcut'])) {
+			return intval($page['shortcut']);
 		}
 		return FALSE;
 	}
