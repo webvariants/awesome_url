@@ -23,7 +23,7 @@ if (!preg_match('/(^|,)tstamp($|,)/', $TYPO3_CONF_VARS['FE']['addRootLineFields'
 	$TYPO3_CONF_VARS['FE']['addRootLineFields'] .= ($TYPO3_CONF_VARS['FE']['addRootLineFields'] ? ',' : '') . 'tstamp';
 }
 
-$TYPO3_CONF_VARS['SC_OPTIONS']['tce']['formevals']['\WV\AwesomeUrl\Validate\Alias'] = 'EXT:awesome_url/Classes/Validate/Alias.php';
+$TYPO3_CONF_VARS['SC_OPTIONS']['tce']['formevals']['WV\AwesomeUrl\Validate\Alias'] = 'EXT:awesome_url/Classes/Validate/Alias.php';
 
 $_EXTCONF = unserialize($_EXTCONF);
 
