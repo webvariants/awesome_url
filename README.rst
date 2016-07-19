@@ -5,7 +5,7 @@ Awesome URL
 ********
 Features
 ********
-- Compatible with Typo3 6.2
+- Compatible with Typo3 6.2 and 7.6
 - Easy configuration via backend
 - Speaking URLs
 - Page language by domain name or path prefix
