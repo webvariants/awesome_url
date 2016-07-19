@@ -36,7 +36,7 @@ CREATE TABLE tx_awesome_url_uri (
 	uid int(11) NOT NULL auto_increment,
 
 	domain_name varchar(80) DEFAULT '' NOT NULL,
-	uri varchar(255) DEFAULT '' NOT NULL,
+	uri varchar(220) DEFAULT '' NOT NULL,
 	uri_depth int(1) DEFAULT '0' NOT NULL,
 	status int(1) DEFAULT '1' NOT NULL,
 	uid_foreign int(11) DEFAULT '0' NOT NULL,

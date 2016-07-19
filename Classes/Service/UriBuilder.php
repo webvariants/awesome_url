@@ -65,7 +65,7 @@ class UriBuilder {
 			$alias = trim($page['tx_awesome_url_alias']);
 			$exclude = $private_recursion && $page['tx_awesome_url_exclude_sub'];
 			if (!$exclude && mb_strpos($alias, '/') === 0) {
-				$path = mb_substr($alias, 1, 255, 'UTF-8');
+				$path = mb_substr($alias, 1, 220, 'UTF-8');
 			} else {
 				$path = '';
 				if ($page['pid'] > 0) {
@@ -173,7 +173,7 @@ class UriBuilder {
 		$res = $db->exec_SELECTquery('uid,uri,status,uid_foreign,sys_language_uid_foreign', 'tx_awesome_url_uri', $where);
 
 		while ($row = $db->sql_fetch_assoc($res)) {
-			$entries[mb_substr($row['uri'], $uri_length, 255, 'UTF-8')] = $row;
+			$entries[mb_substr($row['uri'], $uri_length, 220, 'UTF-8')] = $row;
 		}
 
 		$db->sql_free_result($res);
@@ -196,7 +196,7 @@ class UriBuilder {
 		$res = $db->exec_SELECTquery('uid,uri,status,uid_foreign,sys_language_uid_foreign', 'tx_awesome_url_uri', $where);
 
 		while ($row = $db->sql_fetch_assoc($res)) {
-			$entries[mb_substr($row['uri'], $uri_length, 255, 'UTF-8')] = $row;
+			$entries[mb_substr($row['uri'], $uri_length, 220, 'UTF-8')] = $row;
 		}
 
 		$db->sql_free_result($res);
