@@ -1,0 +1,1 @@
+php-cs-fixer.phar fix . --level=symfony

@@ -11,38 +11,64 @@
 
 namespace WV\AwesomeUrl\Hooks;
 
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
 // Hook done in ext_localconf.php
 
-class DataHandler {
+class DataHandler
+{
+    /**
+     * @var \WV\AwesomeUrl\Service\UriRules
+     */
+    private $uri_rules = null;
 
-	public function processCmdmap_deleteAction($table, $id, $recordToDelete, $recordWasDeleted, $data_handler) {
-		/* @var $data_handler \TYPO3\CMS\Core\DataHandling\DataHandler */
+    public function __construct()
+    {
+        $this->uri_rules = GeneralUtility::makeInstance('WV\\AwesomeUrl\\Service\\UriRules');
+    }
 
-		if ($table === 'pages') {
-			$this->deactivate($id);
-		} elseif ($table === 'pages_language_overlay') {
-			$this->deactivate($recordToDelete['pid'], $recordToDelete['sys_language_uid']);
-		}
-	}
+    public function processCmdmap_deleteAction($table, $id, $recordToDelete, $recordWasDeleted, $data_handler)
+    {
+        /* @var $data_handler \TYPO3\CMS\Core\DataHandling\DataHandler */
 
-	/**
-	 *
-	 * @return \TYPO3\CMS\Core\Database\DatabaseConnection;
-	 */
-	private function db() {
-		return $GLOBALS['TYPO3_DB'];
-	}
+        if ($table === 'pages') {
+            $this->deactivate($id);
+        } elseif ($table === 'pages_language_overlay') {
+            $this->deactivate($recordToDelete['pid'], $recordToDelete['sys_language_uid']);
+        } elseif ($this->uri_rules->hasTable($table)) {
+            $this->deactivateTable($table, $id);
+        }
+    }
 
-	private function deactivate($uid_foreign, $sys_language_uid_foreign = null) {
-		$db = $this->db();
+    /**
+     * @return \TYPO3\CMS\Core\Database\DatabaseConnection;
+     */
+    private function db()
+    {
+        return $GLOBALS['TYPO3_DB'];
+    }
 
-		$where = "status = 1 AND uid_foreign = $uid_foreign";
-		if ($sys_language_uid_foreign !== null) {
-			$where .= " AND sys_language_uid_foreign = $sys_language_uid_foreign";
-		}
+    private function deactivate($uid_foreign, $sys_language_uid_foreign = null)
+    {
+        $db = $this->db();
 
-		$res = $db->exec_UPDATEquery('tx_awesome_url_uri', $where, array('status' => 0));
-		$db->sql_free_result($res);
-	}
+        $where = "status = 1 AND uid_foreign = $uid_foreign";
+        if ($sys_language_uid_foreign !== null) {
+            $where .= " AND sys_language_uid_foreign = $sys_language_uid_foreign";
+        }
 
+        $res = $db->exec_UPDATEquery('tx_awesome_url_uri', $where, array('status' => 0));
+        $db->sql_free_result($res);
+    }
+
+    private function deactivateTable($table, $uid)
+    {
+        $db = $this->db();
+
+        $where = 'status = 1 AND rule_table = '.$db->fullQuoteStr($table, 'tx_awesome_url_uri');
+        $where .= ' AND rule_uid = '.$db->fullQuoteStr($uid, 'tx_awesome_url_uri');
+
+        $res = $db->exec_UPDATEquery('tx_awesome_url_uri', $where, array('status' => 0));
+        $db->sql_free_result($res);
+    }
 }
