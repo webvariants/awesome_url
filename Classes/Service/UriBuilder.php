@@ -50,6 +50,12 @@ class UriBuilder implements \TYPO3\CMS\Core\SingletonInterface
 
     private function privatePathForPage($domain_info, $uid, $sys_language_uid = null, $rule = false, $last_change = null, $private_recursion = 0)
     {
+        if ($rule && $rule['tstamp']) {
+            if (!$last_change || $last_change < $rule['tstamp']) {
+                $last_change = $rule['tstamp'];
+            }
+        }
+
         if ($last_change) {
             $active_entry = $this->findActive($uid, $sys_language_uid, $rule);
             if ($active_entry && $last_change <= $active_entry['tstamp'] && $domain_info['name'] == $active_entry['domain_name']) {

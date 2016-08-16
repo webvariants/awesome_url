@@ -91,6 +91,9 @@ class UriRules implements \TYPO3\CMS\Core\SingletonInterface
                     if (!array_key_exists('uid', $doneRule)) {
                         $doneRule['uid'] = 0;
                     }
+                    if (!array_key_exists('tstamp', $doneRule)) {
+                        $doneRule['tstamp'] = null;
+                    }
 
                     return $doneRule;
                 }
@@ -107,20 +110,25 @@ class UriRules implements \TYPO3\CMS\Core\SingletonInterface
         $table = $params['table'];
         $title_fields = $params['title'];
         $L_field = array_key_exists('L', $params) ? $params['L'] : null;
+        $tstamp_field = array_key_exists('tstamp', $params) ? $params['tstamp'] : null;
         $Lall = array_key_exists('Lall', $params) ? $params['Lall'] : null;
-        $l10n_parent = array_key_exists('l10n_parent', $params) ? $params['l10n_parent'] : null;
+        $l10n_parent_field = array_key_exists('l10n_parent', $params) ? $params['l10n_parent'] : null;
         $uid_safe = $db->fullQuoteStr($uid, $table);
         $L_uid = $db->fullQuoteStr($sys_language_uid, $table);
         $select = $params['title'];
         $select[] = $uid_field;
         $where = array();
 
-        if ($l10n_parent) {
-            $select[] = $l10n_parent;
+        if ($l10n_parent_field) {
+            $select[] = $l10n_parent_field;
         }
 
-        if ($l10n_parent && $sys_language_uid) {
-            $where[] = '('.$uid_field.'='.$uid_safe.' OR '.$l10n_parent.'='.$uid_safe.')';
+        if ($tstamp_field) {
+            $select[] = $tstamp_field;
+        }
+
+        if ($l10n_parent_field && $sys_language_uid) {
+            $where[] = '('.$uid_field.'='.$uid_safe.' OR '.$l10n_parent_field.'='.$uid_safe.')';
         } else {
             $where[] = $uid_field.' = '.$uid_safe;
         }
@@ -136,13 +144,13 @@ class UriRules implements \TYPO3\CMS\Core\SingletonInterface
         $row = null;
         $res = $db->exec_SELECTquery(implode(',', $select), $table, implode(' AND ', $where));
         while ($i = $db->sql_fetch_assoc($res)) {
-            if ($Lall && $l10n_parent && $i[$L_field] != $Lall && $i[$l10n_parent] == $uid) {
+            if ($Lall && $l10n_parent_field && $i[$L_field] != $Lall && $i[$l10n_parent_field] == $uid) {
                 $row = $i;
                 // perfect match, so break loop
                 break;
-            } elseif ($Lall && $l10n_parent && $i[$L_field] != $Lall) {
+            } elseif ($Lall && $l10n_parent_field && $i[$L_field] != $Lall) {
                 $row = $i;
-            } elseif (!$Lall && $l10n_parent && $i[$l10n_parent] == $uid) {
+            } elseif (!$Lall && $l10n_parent_field && $i[$l10n_parent_field] == $uid) {
                 $row = $i;
                 // perfect match, so break loop
                 break;
@@ -168,6 +176,7 @@ class UriRules implements \TYPO3\CMS\Core\SingletonInterface
             'title' => $title ?: $row[$uid_field],
             'uid' => $row[$uid_field],
             'table' => $table,
+            'tstamp' => $tstamp_field ? $row[$tstamp_field] : null,
         );
     }
 
