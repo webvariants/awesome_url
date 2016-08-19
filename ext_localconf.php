@@ -18,6 +18,11 @@ $TYPO3_CONF_VARS['SC_OPTIONS']['tslib/class.tslib_fe.php']['checkAlternativeIdMe
 $TYPO3_CONF_VARS['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processCmdmapClass']['wv_awesome_url'] = '&WV\\AwesomeUrl\\Hooks\\DataHandler';
 
 $TYPO3_CONF_VARS['FE']['pageOverlayFields'] .= ',tx_awesome_url_alias,tx_awesome_url_exclude_sub';
+$fieldArr = \TYPO3\CMS\Core\Utility\GeneralUtility::trimExplode(',', $GLOBALS['TYPO3_CONF_VARS']['FE']['pageOverlayFields'], true);
+if (!in_array('tstamp', $fieldArr)) {
+    // tstamp is important to trigger url updates of translated pages
+    $TYPO3_CONF_VARS['FE']['pageOverlayFields'] .= ',tstamp';
+}
 
 if (!preg_match('/(^|,)tstamp($|,)/', $TYPO3_CONF_VARS['FE']['addRootLineFields'])) {
     $TYPO3_CONF_VARS['FE']['addRootLineFields'] .= ($TYPO3_CONF_VARS['FE']['addRootLineFields'] ? ',' : '').'tstamp';

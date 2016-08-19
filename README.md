@@ -84,7 +84,7 @@ In your project extension ``ext_localconf.php`` add
                         'Lall' => '-1',
                         'l10n_parent' => 'l10n_parent',
                         'tstamp' => 'tstamp',
-                        'title' => array('title')
+                        'title' => array('path_segment', 'title')
                     ),
                     'tx_news_pi1[controller]' => 'News',
                     'tx_news_pi1[action]' => 'detail'

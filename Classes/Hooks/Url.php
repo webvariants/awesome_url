@@ -64,6 +64,10 @@ class Url
 
             $tstamp_rootline = 0;
             foreach ($target_rootline as $page_i) {
+                if ($target_language_uid && $target_language_uid != $this->pageContext->sys_language_uid) {
+                    $page_i = $this->pageContext->getPageOverlay($page_i, $target_language_uid);
+                }
+
                 $tstamp_rootline = max($tstamp_rootline, $page_i['tstamp']);
             }
 
