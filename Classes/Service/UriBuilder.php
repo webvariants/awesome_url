@@ -59,6 +59,12 @@ class UriBuilder implements \TYPO3\CMS\Core\SingletonInterface
         if ($last_change) {
             $active_entry = $this->findActive($uid, $sys_language_uid, $rule);
             if ($active_entry && $last_change <= $active_entry['tstamp'] && $domain_info['name'] == $active_entry['domain_name']) {
+                if ($rule['cHash'] !== null) {
+                    if ($rule['cHash'] !== $active_entry['c_hash']) {
+                        $this->updateCHash($active_entry['uid'], $rule);
+                    }
+                }
+
                 return $active_entry['uri'];
             }
         }
@@ -110,7 +116,7 @@ class UriBuilder implements \TYPO3\CMS\Core\SingletonInterface
                     && $uri_entry['sys_language_uid_foreign'] == $sys_language_uid
                     && $uri_entry['rule'] === $rule_name
                     && $uri_entry['get_params'] == $rule_get_params
-                ) {
+            ) {
                 // matching uid and language
 
                 if ($uri_entry['status'] == 1) {
@@ -131,7 +137,7 @@ class UriBuilder implements \TYPO3\CMS\Core\SingletonInterface
                     $path = $this->name_suffix($domain_info['name'], $path, $uid, $sys_language_uid, $rule, $last_change);
                 } else {
                     // the entry is not active, so we can take it over
-                    $this->reuse($uri_entry, $uid, $sys_language_uid, $rule_name, $rule_get_params);
+                    $this->reuse($uri_entry, $uid, $sys_language_uid, $rule);
                 }
             }
         } else {
@@ -171,7 +177,7 @@ class UriBuilder implements \TYPO3\CMS\Core\SingletonInterface
         $domain_name_safe = $db->fullQuoteStr($domain_name, 'tx_awesome_url_uri');
         $uri_safe = $db->fullQuoteStr($uri, 'tx_awesome_url_uri');
         $where = "domain_name = $domain_name_safe AND uri = $uri_safe AND uri_depth = $uri_depth";
-        $res = $db->exec_SELECTquery('uid,status,uid_foreign,sys_language_uid_foreign,rule,get_params', 'tx_awesome_url_uri', $where);
+        $res = $db->exec_SELECTquery('uid,status,uid_foreign,sys_language_uid_foreign,rule,get_params,c_hash', 'tx_awesome_url_uri', $where);
         $row = $db->sql_fetch_assoc($res);
         $db->sql_free_result($res);
 
@@ -188,7 +194,7 @@ class UriBuilder implements \TYPO3\CMS\Core\SingletonInterface
         } else {
             $where .= ' AND get_params = "" AND rule = ""';
         }
-        $res = $db->exec_SELECTquery('uid,domain_name,uri,status,uid_foreign,sys_language_uid_foreign,tstamp', 'tx_awesome_url_uri', $where);
+        $res = $db->exec_SELECTquery('uid,domain_name,uri,status,uid_foreign,sys_language_uid_foreign,tstamp,c_hash', 'tx_awesome_url_uri', $where);
         $row = $db->sql_fetch_assoc($res);
         $db->sql_free_result($res);
 
@@ -297,6 +303,7 @@ class UriBuilder implements \TYPO3\CMS\Core\SingletonInterface
             'get_params' => $rule ? $rule['get_params'] : '',
             'rule_table' => $rule ? $rule['table'] : '',
             'rule_uid' => $rule ? $rule['uid'] : 0,
+            'c_hash' => $rule ? $rule['cHash'] : null,
         ));
 
         $uid = $db->sql_insert_id();
@@ -319,10 +326,21 @@ class UriBuilder implements \TYPO3\CMS\Core\SingletonInterface
         $res = $db->exec_UPDATEquery('tx_awesome_url_uri', "uid = $uid", array(
             'status' => 1,
             'tstamp' => $this->time(),
+            'c_hash' => $rule ? $rule['cHash'] : null,
         ));
         $db->sql_free_result($res);
 
         $this->deactivate($uid_foreign, $sys_language_uid_foreign, $uid, $rule);
+    }
+
+    private function updateCHash($uid, $rule)
+    {
+        $db = $this->db();
+
+        $res = $db->exec_UPDATEquery('tx_awesome_url_uri', "uid = $uid", array(
+            'c_hash' => $rule ? $rule['cHash'] : null,
+        ));
+        $db->sql_free_result($res);
     }
 
     private function reuse($uri_entry, $uid_foreign, $sys_language_uid_foreign, $rule = false)
@@ -339,6 +357,7 @@ class UriBuilder implements \TYPO3\CMS\Core\SingletonInterface
             'get_params' => $rule ? $rule['get_params'] : '',
             'rule_table' => $rule ? $rule['table'] : '',
             'rule_uid' => $rule ? $rule['uid'] : 0,
+            'c_hash' => $rule ? $rule['cHash'] : null,
         ));
         $db->sql_free_result($res);
 

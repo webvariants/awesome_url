@@ -80,6 +80,15 @@ class UriRules implements \TYPO3\CMS\Core\SingletonInterface
                         unset($linkVarsArray[$key]);
                     }
 
+                    $doneRule['cHash'] = null;
+                    if (array_key_exists('cHash', $rule) && $rule['cHash']) {
+                        if (count($linkVarsArray) === 1 && array_key_exists('cHash', $linkVarsArray) && $linkVarsArray['cHash']) {
+                            // remove cHash only if no GET parameter is left
+                            $doneRule['cHash'] = $linkVarsArray['cHash'];
+                            unset($linkVarsArray['cHash']);
+                        }
+                    }
+
                     ksort($matchVars, SORT_STRING);
 
                     $doneRule['vars'] = $matchVars;

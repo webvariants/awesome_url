@@ -183,7 +183,7 @@ class Url
                 if ($uri_entry) {
                     //					$parentObject->type = 0;
                     $parentObject->id = $uri_entry['uid_foreign'];
-//					$parentObject->sys_language_uid = $uri_entry['sys_language_uid_foreign']; // seems not nessesary
+//                    $parentObject->sys_language_uid = $uri_entry['sys_language_uid_foreign']; // seems not nessesary
                     if ($uri_entry['sys_language_uid_foreign']) {
                         $_GET['L'] = $uri_entry['sys_language_uid_foreign'];
                     }
@@ -191,6 +191,11 @@ class Url
                     if ($uri_entry['get_params']) {
                         $get_parasms = GeneralUtility::explodeUrl2Array($uri_entry['get_params'], true);
                         ArrayUtility::mergeRecursiveWithOverrule($_GET, $get_parasms, true, true, false);
+                    }
+
+                    if ($uri_entry['c_hash']) {
+                        ArrayUtility::mergeRecursiveWithOverrule($_GET, array('cHash' => $uri_entry['c_hash']), true, true, false);
+                        $GLOBALS['TSFE']->cHash = $uri_entry['c_hash'];
                     }
 
                     if ($uri_entry['status'] == 1) {

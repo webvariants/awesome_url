@@ -46,6 +46,7 @@ CREATE TABLE tx_awesome_url_uri (
 	get_params mediumtext,
 	rule_table varchar(64) DEFAULT NULL,
 	rule_uid int(11) DEFAULT '0' NOT NULL,
+	c_hash varchar(250) DEFAULT NULL,
 
 	PRIMARY KEY (uid),
 	KEY tx_awesome_url_domain_idx1 (domain_name,uri,uri_depth,status),

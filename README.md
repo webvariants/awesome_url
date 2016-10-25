@@ -7,6 +7,7 @@
 - Speaking URLs
 - Page language by domain name or path prefix
 - Old links to pages will still work if title or alias changed
+- Dataset and cHash support
 - Easy migration from simulatestatic possible
 
 ## Usage
@@ -88,6 +89,7 @@ In your project extension ``ext_localconf.php`` add
                     ),
                     'tx_news_pi1[controller]' => 'News',
                     'tx_news_pi1[action]' => 'detail'
-                )
+                ),
+                'cHash' => true
             ));
     }
