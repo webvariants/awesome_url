@@ -191,6 +191,9 @@ class Url
                     if ($uri_entry['get_params']) {
                         $get_parasms = GeneralUtility::explodeUrl2Array($uri_entry['get_params'], true);
                         ArrayUtility::mergeRecursiveWithOverrule($_GET, $get_parasms, true, true, false);
+                        if (array_key_exists('type', $get_parasms) && is_numeric($get_parasms['type'])) {
+                            $parentObject->type = $get_parasms['type'];
+                        }
                     }
 
                     if ($uri_entry['c_hash']) {
