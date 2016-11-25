@@ -8,6 +8,7 @@
 - Page language by domain name or path prefix
 - Old links to pages will still work if title or alias changed
 - Dataset and cHash support
+- 404 Handling
 - Easy migration from simulatestatic possible
 
 ## Usage

@@ -55,9 +55,33 @@ $GLOBALS['TCA']['tx_awesome_url_domain'] = array(
                 'eval' => 'WV\AwesomeUrl\Validate\Alias',
             ),
         ),
+        'page404' => array(
+            'exclude' => 0,
+            'label' => 'LLL:EXT:awesome_url/Resources/Private/Language/locallang.xlf:labelPage404',
+            'config' => array(
+                'type' => 'input',
+                'eval' => 'trim',
+                'wizards' => [
+                    'link' => [
+                        'type' => 'popup',
+                        'title' => 'LLL:EXT:frontend/Resources/Private/Language/locallang_ttc.xlf:header_link_formlabel',
+                        'icon' => 'EXT:backend/Resources/Public/Images/FormFieldWizard/wizard_link.gif',
+                        'module' => [
+                            'name' => 'wizard_link',
+                        ],
+                        'JSopenParams' => 'width=800,height=600,status=0,menubar=0,scrollbars=1',
+                        'params' => [
+                            'blindLinkOptions' => 'url,folder,file,mail,spec',
+                            'blindLinkFields' => 'class,params,target,title',
+                        ],
+                    ],
+                ],
+                'softref' => 'typolink',
+            ),
+        ),
     ),
     'types' => array(
-        '0' => array('showitem' => 'sys_language_uid,path_prefix'),
+        '0' => array('showitem' => 'sys_language_uid,path_prefix,page404'),
     ),
     'palettes' => array(
         '1' => array('showitem' => ''),

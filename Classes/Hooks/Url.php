@@ -213,9 +213,19 @@ class Url
 
                     $hit = true;
                     $redirect_language_uid = (int) GeneralUtility::_GET('L');
-                } elseif ($this->hasUrlDomain($domain_name)) {
-                    // Call handler
-                    $parentObject->pageNotFoundAndExit('Couldn\'t map alias "'.$path.'" to an ID');
+                } else {
+                    $domain_uid = $this->fetchUrlDomainUid($domain_name);
+                    if ($domain_uid) {
+                        list($page404, $page404lang) = $this->fetch404ForDomain($domain_uid, $path);
+                        if ($page404) {
+                            $parentObject->id = $page404;
+                            $parentObject->sys_language_uid = $page404lang;
+                            HttpUtility::setResponseCode(HttpUtility::HTTP_STATUS_404);
+                        } else {
+                            // Call handler
+                            $parentObject->pageNotFoundAndExit('Couldn\'t map alias "'.$path.'" to an ID');
+                        }
+                    }
                 }
             }
         }
@@ -276,7 +286,7 @@ class Url
         return $GLOBALS['TYPO3_DB'];
     }
 
-    private function hasUrlDomain($domain_name)
+    private function fetchUrlDomainUid($domain_name)
     {
         $db = $this->db();
         $domain_name_safe = $db->fullQuoteStr($domain_name, 'sys_domain');
@@ -293,7 +303,7 @@ class Url
             return false;
         }
 
-        return true;
+        return $rows['uid'];
     }
 
     private function getRedirect($uid)
@@ -340,6 +350,29 @@ class Url
             'is_language_domain' => $is_language_domain,
             'sys_language_uid' => $row_sys_language_uid,
         );
+    }
+
+    private function fetch404ForDomain($domain_uid, $path)
+    {
+        $db = $this->db();
+        $res = $db->exec_SELECTquery('uid,sys_language_uid,path_prefix,page404', 'tx_awesome_url_domain', 'uid_foreign = '.$domain_uid.' AND page404 > 0 AND hidden = 0 AND deleted = 0');
+        $page404 = 0;
+        $sys_language_uid = 0;
+        $matchLength = 0;
+
+        while ($row = $db->sql_fetch_assoc($res)) {
+            if ($row['path_prefix'] === '' || \TYPO3\CMS\Core\Utility\StringUtility::beginsWith($path, $row['path_prefix'])) {
+                $len = strlen($row['path_prefix']);
+                if ($matchLength === 0 || $len > $matchLength) {
+                    $matchLength = $len;
+                    $page404 = $row['page404'];
+                    $sys_language_uid = $row['sys_language_uid'] > 0 ? $row['sys_language_uid'] : 0;
+                }
+            }
+        }
+        $db->sql_free_result($res);
+
+        return [$page404, $sys_language_uid];
     }
 
     private function extractLanguage($linkVarsArray)

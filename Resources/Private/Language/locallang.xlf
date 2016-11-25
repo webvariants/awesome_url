@@ -12,6 +12,9 @@
 			<trans-unit id="labelPathPrefix" xml:space="preserve">
 				<source>prefix</source>
 			</trans-unit>
+			<trans-unit id="labelPage404" xml:space="preserve">
+				<source>404 page</source>
+			</trans-unit>
 			<trans-unit id="labelAlias" xml:space="preserve">
 				<source>URL alias</source>
 			</trans-unit>

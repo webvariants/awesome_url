@@ -15,6 +15,10 @@
 				<source>prefix</source>
 				<target>Prefix</target>
 			</trans-unit>
+			<trans-unit id="labelPage404" xml:space="preserve">
+				<source>404 page</source>
+				<target>404 Seite</target>
+			</trans-unit>
 			<trans-unit id="labelAlias" xml:space="preserve">
 				<source>URL alias</source>
 				<target>URL Alias</target>

@@ -28,6 +28,7 @@ CREATE TABLE tx_awesome_url_domain (
 
 	sys_language_uid int(11) DEFAULT '-1' NOT NULL,
 	path_prefix varchar(40) DEFAULT NULL,
+	page404 int(11) DEFAULT '0' NOT NULL,
 
 	PRIMARY KEY (uid),
 );
