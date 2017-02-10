@@ -219,7 +219,10 @@ class Url
                         list($page404, $page404lang) = $this->fetch404ForDomain($domain_uid, $path);
                         if ($page404) {
                             $parentObject->id = $page404;
-                            $parentObject->sys_language_uid = $page404lang;
+//                            $parentObject->sys_language_uid = $page404lang; // seems not nessesary
+                            if ($page404lang) {
+                                $_GET['L'] = $page404lang;
+                            }
                             HttpUtility::setResponseCode(HttpUtility::HTTP_STATUS_404);
                         } else {
                             // Call handler
