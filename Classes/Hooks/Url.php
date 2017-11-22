@@ -17,7 +17,7 @@ use TYPO3\CMS\Core\Utility\HttpUtility;
 
 // Hook done in ext_localconf.php
 
-class Url
+class Url implements \TYPO3\CMS\Core\SingletonInterface
 {
     /**
      * @var \TYPO3\CMS\Frontend\Page\PageRepository

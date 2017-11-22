@@ -15,7 +15,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 // Hook done in ext_localconf.php
 
-class DataHandler
+class DataHandler implements \TYPO3\CMS\Core\SingletonInterface
 {
     /**
      * @var \WV\AwesomeUrl\Service\UriRules
