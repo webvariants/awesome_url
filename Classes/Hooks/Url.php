@@ -129,7 +129,7 @@ class Url implements \TYPO3\CMS\Core\SingletonInterface
      */
     public function checkAlternativeIdMethodsPost(array &$parameters, &$parentObject)
     {
-        $siteScript = $parentObject->siteScript;
+        $siteScript = urldecode($parentObject->siteScript);
 
         $can_redirect = $_SERVER['REQUEST_METHOD'] === 'GET' || $_SERVER['REQUEST_METHOD'] === 'HEAD';
         $hit = false;

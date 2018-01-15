@@ -154,7 +154,7 @@ class UriBuilder implements \TYPO3\CMS\Core\SingletonInterface
         // Get replacement character
         $replacementChar = $this->getCharReplaceWith(true);
         $replacementChars = $this->getCharReplaceWith(false);
-        $ret = preg_replace('/[^'.$this->getCharWhitelist().']/', $replacementChar, trim(substr($ret, 0, $this->getTitleMax())));
+        $ret = preg_replace('/[^'.$this->getCharWhitelist().']/u', $replacementChar, trim(substr($ret, 0, $this->getTitleMax())));
         $ret = preg_replace('/(['.$replacementChars.']){2,}/', $replacementChar, $ret); // groups of replacement chars
         $ret = preg_replace('/['.$replacementChars.']?$/', '', $ret); // replacement chars at end
         $ret = preg_replace('/^['.$replacementChars.']?/', '', $ret); // replacement chars at start

@@ -94,3 +94,10 @@ In your project extension ``ext_localconf.php`` add
                 'cHash' => true
             ));
     }
+
+## Additional RegEx groups for different languages
+
+### Chinese
+
+basic.charsWhitelist: \p{Han}
+basic.charsWhitelistAlias: \u4E00-\u9FA5
