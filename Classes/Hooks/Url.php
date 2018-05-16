@@ -14,6 +14,7 @@ namespace WV\AwesomeUrl\Hooks;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\HttpUtility;
+use TYPO3\CMS\Core\Utility\StringUtility;
 
 // Hook done in ext_localconf.php
 
@@ -358,17 +359,21 @@ class Url implements \TYPO3\CMS\Core\SingletonInterface
     private function fetch404ForDomain($domain_uid, $path)
     {
         $db = $this->db();
-        $res = $db->exec_SELECTquery('uid,sys_language_uid,path_prefix,page404', 'tx_awesome_url_domain', 'uid_foreign = '.$domain_uid.' AND page404 > 0 AND hidden = 0 AND deleted = 0');
+        $res = $db->exec_SELECTquery('uid,sys_language_uid,path_prefix,page404', 'tx_awesome_url_domain', 'uid_foreign = '.$domain_uid.' AND page404 != \'\' AND hidden = 0 AND deleted = 0');
         $page404 = 0;
         $sys_language_uid = 0;
         $matchLength = 0;
 
         while ($row = $db->sql_fetch_assoc($res)) {
-            if ($row['path_prefix'] === '' || \TYPO3\CMS\Core\Utility\StringUtility::beginsWith($path, $row['path_prefix'])) {
+            if ($row['path_prefix'] === '' || StringUtility::beginsWith($path, $row['path_prefix'])) {
                 $len = strlen($row['path_prefix']);
                 if ($matchLength === 0 || $len > $matchLength) {
                     $matchLength = $len;
                     $page404 = $row['page404'];
+                    $pagePrefix = 't3://page?uid=';
+                    if (StringUtility::beginsWith($page404, $pagePrefix)) {
+                        $page404 = (int) substr($page404, strlen($pagePrefix));
+                    }
                     $sys_language_uid = $row['sys_language_uid'] > 0 ? $row['sys_language_uid'] : 0;
                 }
             }
